@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import mcts
 
 
 class GameState:
@@ -240,7 +241,7 @@ class GameState:
         return bi, pi
 
     def __str__(self):
-        result = ""
+        result = f"{self.to_move} to move\nRequired board: {self.board_to_move}\n"
 
         for row in range(9):
 
@@ -272,13 +273,6 @@ if __name__ == "__main__":
 
     b.move(0, 1)
 
-    print(b)
+    first_node = mcts.Node(b)
 
-    # input("Press enter to print all moves")
-
-    next_board = b.all_possible_moves()[1]
-    print("NEXT BOARD")
-    print(next_board)
-    print("+" * 20)
-    for i in next_board.all_possible_moves():
-        print(i)
+    print(first_node.rollout_random(verbose=True))
