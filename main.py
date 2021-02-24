@@ -18,6 +18,8 @@ class GameState:
             # Add an empty board
             self.board.append([None] * 9)
 
+        self.previous_move = None
+
     def copy_board(self):
         """
         Returns an exact new_copy of the current board
@@ -40,9 +42,13 @@ class GameState:
         :return: 'X' if x is winning, 'O' if o is winning, None if neither is winning and the game goes on, False if a tie
         """
 
+        # If the board is empty, the game goes on
+        if set(board) == {None}:
+            return None
+
         def check_rows(b):
             for row in b:
-                if len(set(row)) == 1:
+                if len(set(row)) == 1 and set(row) != {None}:
                     return row[0]
             return None
 
@@ -80,14 +86,17 @@ class GameState:
         """
         Checks if the move is valid based on current conditions
 
-        WARNING: This method is not implemented yet!
+        WARNING: This method is not fully implemented yet!
 
         :param board: int between 0 and 8 to move on
         :param spot: int between 0 and 8 for the spot to play on
         :return: True if valid, false if not
         """
 
-        return True
+        if 0 <= board <= 8 and 0 <= spot <= 8:
+            return True
+
+        return False
 
     @property
     def game_result(self):
@@ -129,7 +138,7 @@ class GameState:
         elif self.to_move == "O":
             self.to_move = "X"
         else:
-            print(f"WHY IS TO MOVE SET TO BE '{self.to_move}'????")
+            raise RuntimeError(f"Unexpected value of self.to_move '{self.to_move}'")
 
         # Update board
 
@@ -138,6 +147,9 @@ class GameState:
             self.board_to_move = spot
         else:
             self.board_to_move = None
+
+        # Update previous move
+        self.previous_move = [board, spot]
 
     def all_possible_moves(self):
         """
@@ -265,14 +277,80 @@ class GameState:
             else:
                 result += "\n=================================\n"
 
-        return result
+        return result.replace("O", "\033[94mO\033[0m").replace("X", "\033[31mX\033[0m")
+
+    # Save the previous move in the format [board, spot]
+    # Only for display purposes
 
 
 if __name__ == "__main__":
     b = GameState()
 
-    b.move(0, 1)
+    # b.move(4, 5)
+    # b.move(5, 1)
+    # b.move(1, 5)
+    # b.move(5, 4)
+    # b.move(4, 5)
+    # b.move(5, 7)
+    #
+    # print(b)
+    # print(b.check_win(b.board[5]))
+    # exit()
 
-    first_node = mcts.Node(b)
+    # a = mcts.Node(b)
+    # a.add_children()
+    #
+    # for i in a.children:
+    #     i.add_children()
+    #
+    # print(a.descendants)
 
-    print(first_node.rollout_random(verbose=True))
+    current_game_node = mcts.Node(b)
+
+    while b.game_result is None:
+
+        print(
+            f"Thinking... {current_game_node.descendants} nodes are in the tree and {current_game_node.n} iterations saved"
+        )
+
+        # Have the computer play a move
+        current_game_node = mcts.mcts(current_game_node, 5000, 10)
+
+        b = current_game_node.board
+        print("COMPUTER MOVE:")
+        print(b.previous_move)
+        print(b)
+
+        print("Your move:")
+
+        asking_for_move = True
+        while asking_for_move:
+            if b.board_to_move is not None:
+                print(f"Board >> {b.board_to_move}")
+                user_board = b.board_to_move
+            else:
+                user_board = int(input("Board >> "))
+            user_spot = int(input("Spot >> "))
+            test_board = b.copy_board()
+
+            test_board.move(user_board, user_spot)
+
+            # In order to avoid restarting the node tree every time, find the node among current_game_node.children with
+            # the board that matches the player's move
+            found_board = False
+            for i in current_game_node.children:
+
+                # If the board matches, use this as the new board
+                if i.board.board == test_board.board:
+                    current_game_node = i
+                    found_board = True
+
+            if not found_board:
+                print(
+                    "Your move was not found as a valid move. Are you sure you entered it correctly?"
+                )
+            else:
+                asking_for_move = False
+                b.move(user_board, user_spot)
+
+        print(b)
