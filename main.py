@@ -88,6 +88,26 @@ class GameState:
 
         return True
 
+    @property
+    def game_result(self):
+        """
+        Gets the status of the game.
+
+        Possible statuses are:
+        'X' - the game is over and X wins
+        'O' - the game is over and O wins
+        None - the game is in progress
+        False - the game is a tie
+        :return: The result of the game; False if tie; and None if the game is in progress
+        """
+
+        full_board_results = []
+
+        for i in self.board:
+            full_board_results.append(self.check_win(i))
+
+        return self.check_win(full_board_results)
+
     def move(self, board, spot):
         """
         Make the given move on the board.
@@ -254,7 +274,11 @@ if __name__ == "__main__":
 
     print(b)
 
-    input("Press enter to print all moves")
-    for i in b.all_possible_moves():
+    # input("Press enter to print all moves")
+
+    next_board = b.all_possible_moves()[1]
+    print("NEXT BOARD")
+    print(next_board)
+    print("+" * 20)
+    for i in next_board.all_possible_moves():
         print(i)
-        print("\n\n")
