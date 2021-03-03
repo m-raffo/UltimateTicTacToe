@@ -5,6 +5,254 @@ from random import choice
 from numpy import log
 
 
+def flip_board(board):
+    """
+    Flips the X and O pieces on a large scale board.
+    :param board: The board
+    :return: list, the converted board
+    """
+
+    flipped_board = []
+
+    for i in board:
+        flipped_board.append([])
+        # Flip X and O in every list
+        # I is just an intermediary character, no other significance
+        for spot in i:
+            if spot == "O":
+                flipped_board[-1].append("X")
+            elif spot == "X":
+                flipped_board[-1].append("O")
+            else:
+                flipped_board[-1].append(None)
+
+    return flipped_board
+
+
+def mini_board_eval(miniboard: list) -> float:
+    """
+    Calculates the evaluation of a mini board.
+
+    eval = (c1 * w) + (c2 * r)
+
+    Where:
+    c1 and c2 = constants
+    w = spaces that are winning if taken
+    r = rows with one spot taken (ie win in two moves)
+
+    :param miniboard: The miniboard to evaluate
+    :return: The evaluation for X
+    """
+
+    # Mini board eval constants
+    c1 = 2
+    c2 = 1
+
+    # Evals of won and lost boards
+    cw = 10
+    cl = 0
+
+    # This will be incremented as matching positions are found
+    r = 0
+
+    winning_index = set()
+
+    # Check each row
+    for i in range(3):
+        row = miniboard[i * 3 : i * 3 + 3]
+        set_row = set(row)
+
+        # Check for win
+        if set_row == {"X"}:
+            return cw
+
+        # Check for loss
+        if set_row == {"O"}:
+            return cl
+
+        # If row is empty except for x, this is a row winnable in two moves
+        if set_row == {"X", None}:
+            count = row.count("X")
+            if count == 1:
+                r += 1
+
+            # If the row is empty except for one, this is a winning index
+            elif count == 2:
+                winning_index.add(i)
+
+    # Check each column
+    for i in range(3):
+        row = [miniboard[i], miniboard[i + 3], miniboard[i + 6]]
+        set_row = set(row)
+
+        # Check for win
+        if set_row == {"X"}:
+            return cw
+
+        # Check for loss
+        if set_row == {"O"}:
+            return cl
+
+        # If row is empty except for x, this is a row winnable in two moves
+        if set_row == {"X", None}:
+            count = row.count("X")
+            if count == 1:
+                r += 1
+
+            # If the row is empty except for one, this is a winning index
+            elif count == 2:
+                winning_index.add(i)
+
+    # Check both diagonals
+    for row in [
+        [miniboard[0], miniboard[4], miniboard[8]],
+        [miniboard[2], miniboard[4], miniboard[6]],
+    ]:
+        set_row = set(row)
+
+        # Check for win
+        if set_row == {"X"}:
+            return cw
+
+        # Check for loss
+        if set_row == {"O"}:
+            return cl
+
+        # If row is empty except for x, this is a row winnable in two moves
+        if set_row == {"X", None}:
+            count = row.count("X")
+            if count == 1:
+                r += 1
+
+            # If the row is empty except for one, this is a winning index
+            elif count == 2:
+                winning_index.add(i)
+
+    w = len(winning_index)
+
+    return c1 * w + c2 * r
+
+
+def calc_significance(board):
+    """
+    Calculates the significance of each miniboard.
+
+    Significance = sum(eval of all boards this board could be involved in a win with)
+
+    :return: list[float] The significance of each board
+    """
+
+    # Calculate each mini board evaluation
+    evals = []
+    for i in board:
+        evals.append(mini_board_eval(i))
+
+    # All win patterns (Note each list does not include the board itself)
+    win_possibilities = {
+        0: [[1, 2], [4, 8], [3, 6]],
+        1: [[4, 7], [0, 2]],
+        2: [[4, 6], [0, 1], [5, 8]],
+        3: [[0, 6], [4, 5]],
+        4: [[0, 8], [1, 7], [2, 6], [3, 5]],
+        5: [[3, 4], [2, 8]],
+        6: [[0, 3], [7, 8], [4, 2]],
+        7: [[6, 8], [1, 4]],
+        8: [[0, 4], [6, 7], [2, 5]],
+    }
+
+    # Calculate the significance of each board (default is 1)
+    significances = []
+    for i in range(9):
+        significances.append(1)
+        # Check each win possibility
+        # TODO: Check if the win is possible before adding the evals?
+        for win_coordinates in win_possibilities[i]:
+
+            miniboard1_eval = evals[win_coordinates[0]]
+            miniboard2_eval = evals[win_coordinates[1]]
+
+            significances[-1] += miniboard1_eval + miniboard2_eval
+
+    return significances
+
+
+def eval_board_one_side(board):
+    """
+    Calculate an evaluation of a full board for one side
+    :param board: list the board
+    :return: float - A number that indicates that extent to which X is winning
+    """
+
+    miniboard_evals = []
+
+    for miniboard in board:
+        miniboard_evals.append(mini_board_eval(miniboard))
+
+    significances = calc_significance(board)
+
+    final_eval = 0
+
+    for i in range(9):
+        final_eval += miniboard_evals[i] * significances[i]
+
+    return final_eval
+
+
+def eval_board(board):
+    """
+    Calculate a full evaluation for both sides of a large board.
+    :param board:
+    :return: float - positive indicates that X is winning; negative indicates O is winning
+    """
+
+    x_eval = eval_board_one_side(board)
+    flipped = flip_board(board)
+    o_eval = eval_board_one_side(flipped)
+
+    return x_eval - o_eval
+
+
+def detail_eval(board):
+    x_eval = eval_board_one_side(board)
+    flipped = flip_board(board)
+    o_eval = eval_board_one_side(flipped)
+
+    return x_eval, o_eval
+
+
+def minimax(board, depth: int):
+    """
+    Calculates the best move based on minimax evaluation of the given depth.
+    :param board: The board to evaluate from
+    :param depth: The number of moves to search into the future
+    :return: [board, move] The ideal move for X to make
+    """
+
+    root_node = board
+    children = [root_node]
+
+    # Add all the children
+    for i in range(depth):
+        print(f"Depth: {i}")
+        new_children = []
+        for child in children:
+            # Get next moves
+            if len(child.children) == 0:
+                child.add_children()
+            # Add all the children to be expanded on next
+            new_children.extend(child.children)
+
+        # Next time loop through all the newly added children
+        children = new_children[:]
+        print(len(children))
+
+    print("Searching best move...")
+    # Find the possible move with the highest evaluation
+    best_move = max(root_node.children, key=lambda x: x.calc_eval_from_children(True))
+
+    return best_move
+
+
 class Node:
     def __init__(self, board, depth=0, parent=None):
         """
@@ -71,7 +319,9 @@ class Node:
                 "Cannot calculate UCB of child when parent node has N of 0"
             )
 
-        return float((child.t / child.n) + 2 * sqrt(log(self.n) / child.n))
+        # Approx the square root of 2
+        c = 1.4142
+        return float((child.t / child.n) + c * sqrt(log(self.n) / child.n))
 
     def rollout_random(self, play_x=True, verbose=False):
         """
@@ -100,11 +350,11 @@ class Node:
 
         # If lose
         elif (result == "O" and play_x) or (result == "X" and not play_x):
-            return 0
+            return -1
 
         # If tie
         elif not result:
-            return 0.5
+            return 0
 
         else:
             raise RuntimeError(f"Unexpected game result: {result}")
@@ -146,6 +396,29 @@ class Node:
 
         return False
 
+    def calc_eval_from_children(self, get_min=False):
+        """
+        Calculates the evaluation from its children's evaluations, recursively.
+        If there are no children, return its heuristic evaluation.
+        :param get_min: Set to true to get the lowest child evaluation
+        :return: float; the evaluation based on children
+        """
+
+        # If no children, return heuristic evaluation
+        if len(self.children) == 0:
+            return self.eval
+
+        # Get all the evaluations
+        values = []
+        for i in self.children:
+            values.append(i.calc_eval_from_children(not get_min))
+
+        # Flip get_min with each turn
+        if get_min:
+            return min(values)
+
+        return max(values)
+
     @property
     def ucb(self):
         return self.parent.calc_UCB_of_child(self)
@@ -153,6 +426,25 @@ class Node:
     @property
     def final_score(self):
         return self.calc_UCB_of_child(self, True)
+
+    @property
+    def eval(self):
+        """
+        Calculates the boards evaluation
+        :return: float; the evaluation
+        """
+
+        # If the game is over, return appropriate value
+        result = self.board.game_result
+        if result == "X":
+            return float("inf")
+        elif result == "O":
+            return float("-inf")
+        # If tie return 0
+        elif result == False:
+            return 0
+
+        return eval_board(self.board.board)
 
     def backpropagate(self, result):
         """
@@ -193,14 +485,20 @@ class Node:
 
 
 def mcts(
-    start_node: Node, iterations: int, think_time: int = None, verbose: bool = False
+    start_node: Node,
+    iterations: int,
+    think_time: int = None,
+    adjust_think_time=False,
+    verbose: bool = False,
 ) -> Node:
     """
     Performs a Monte Carlo Tree Search for the given number of iterations.
 
+    :param adjust_think_time:
     :param start_node: Node, the starting node / initial state
     :param iterations: int, number of iterations to be performed
     :param think_time: int, number of seconds to think for (default=None), will be prioritized over iterations if set
+    :param adjust_think_time: bool, set to True to allow the for more iterations when there are more available moves (default=False)
     :param verbose: bool, True to print out all nodes and simulation results, (default=False)
     :return: Node, the node with the highest score (ie the recommended move)
     """
@@ -258,7 +556,13 @@ def mcts(
     else:
         start_time = time.time()
         iterations_performed = 0
-        while time.time() < start_time + think_time:
+
+        if len(start_node.board.all_possible_moves()) > 9:
+            new_think_time = think_time * 2
+        else:
+            new_think_time = think_time
+
+        while time.time() < start_time + new_think_time:
             iterations_performed += 1
             main_loop()
 

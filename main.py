@@ -1,6 +1,8 @@
 import numpy as np
 import copy
 import mcts
+import cProfile
+import pickle
 
 
 class GameState:
@@ -22,17 +24,11 @@ class GameState:
 
     def copy_board(self):
         """
-        Returns an exact new_copy of the current board
+        Returns an exact new_copy of the current board, much faster than deepcopy
         :return: GameState
         """
 
-        new_copy = GameState()
-
-        new_copy.board = copy.deepcopy(self.board)
-        new_copy.to_move = self.to_move
-        new_copy.board_to_move = self.board_to_move
-
-        return new_copy
+        return pickle.loads(pickle.dumps(self, -1))
 
     @staticmethod
     def check_win(board):
@@ -48,7 +44,8 @@ class GameState:
 
         def check_rows(b):
             for row in b:
-                if len(set(row)) == 1 and set(row) != {None}:
+                row_set = set(row)
+                if row_set != {None} and len(row_set) == 1:
                     return row[0]
             return None
 
@@ -286,14 +283,28 @@ class GameState:
 if __name__ == "__main__":
     b = GameState()
 
+    b.to_move = "X"
+
     # b.move(4, 5)
     # b.move(5, 1)
     # b.move(1, 5)
     # b.move(5, 4)
-    # b.move(4, 5)
-    # b.move(5, 7)
-    #
+    # b.move(4, 4)
+    # b.move(3, 7)
+    # b.move(4, 3)
+
     # print(b)
+    #
+    current_game_node = mcts.Node(b)
+    #
+    # print(mcts.eval_board(b.board))
+    #
+    # print(mcts.minimax(b, 3))
+
+    #
+    # cProfile.run("mcts.mcts(current_game_node, 10000)")
+    #
+    # exit()
     # print(b.check_win(b.board[5]))
     # exit()
 
@@ -305,21 +316,29 @@ if __name__ == "__main__":
     #
     # print(a.descendants)
 
-    current_game_node = mcts.Node(b)
-
     while b.game_result is None:
 
-        print(
-            f"Thinking... {current_game_node.descendants} nodes are in the tree and {current_game_node.n} iterations saved"
-        )
+        # print(
+        #     f"Thinking... {current_game_node.descendants} nodes are in the tree and {current_game_node.n} iterations saved"
+        # )
 
         # Have the computer play a move
-        current_game_node = mcts.mcts(current_game_node, 5000, 10)
+        # current_game_node = mcts.mcts(current_game_node, 1000, 20)
+        if current_game_node.board.board_to_move is None:
+            current_game_node = mcts.minimax(current_game_node, 3)
+        else:
+            current_game_node = mcts.minimax(current_game_node, 4)
 
         b = current_game_node.board
         print("COMPUTER MOVE:")
         print(b.previous_move)
+        print(mcts.detail_eval(b.board))
+        print(b.board)
         print(b)
+
+        if b.game_result is not None:
+            print("You have lost!")
+            break
 
         print("Your move:")
 
@@ -353,4 +372,9 @@ if __name__ == "__main__":
                 asking_for_move = False
                 b.move(user_board, user_spot)
 
+        print(mcts.detail_eval(b.board))
+        print(b.board)
         print(b)
+
+    if b.game_result == "O":
+        print("You have won!!")
