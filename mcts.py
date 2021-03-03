@@ -2,6 +2,7 @@ import time
 from math import sqrt
 from random import choice
 
+import numpy as np
 from numpy import log
 
 
@@ -33,7 +34,7 @@ def mini_board_eval(miniboard: list) -> float:
     """
     Calculates the evaluation of a mini board.
 
-    eval = (c1 * w) + (c2 * r)
+    eval = (c1 * (w ^ 0.5)) + (c2 * r)
 
     Where:
     c1 and c2 = constants
@@ -130,7 +131,56 @@ def mini_board_eval(miniboard: list) -> float:
 
     w = len(winning_index)
 
-    return c1 * w + c2 * r
+    return c1 * (w ** 0.5) + c2 * r
+
+
+def check_win(board):
+    """
+    Checks if the given board is a win (ie three in a row)
+    :param board: A list of the board
+    :return: 'X' if x is winning, 'O' if o is winning, None if neither is winning and the game goes on, False if a tie
+    """
+
+    # If the board is empty, the game goes on
+    if set(board) == {None}:
+        return None
+
+    def check_rows(b):
+        for row in b:
+            row_set = set(row)
+            if row_set != {None} and len(row_set) == 1:
+                return row[0]
+        return None
+
+    def check_diagonals(b):
+        if len(set([b[i][i] for i in range(len(b))])) == 1:
+            return b[0][0]
+        if len(set([b[i][len(b) - i - 1] for i in range(len(b))])) == 1:
+            return b[0][len(b) - 1]
+        return None
+
+    # Check both rows and columns, return if there is a winner
+    board_width = 3
+    square_board = [
+        board[i : i + board_width] for i in range(0, len(board), board_width)
+    ]
+
+    for new_board in [square_board, np.transpose(square_board)]:
+        result = check_rows(new_board)
+
+        if result:
+            return result
+
+    # Check diagonals
+    result = check_diagonals(new_board)
+    if result:
+        return result
+
+    # If the board is filled, tie; if not, the game continues
+    if None in board:
+        return None
+
+    return False
 
 
 def calc_significance(board):
@@ -167,6 +217,13 @@ def calc_significance(board):
         # Check each win possibility
         # TODO: Check if the win is possible before adding the evals?
         for win_coordinates in win_possibilities[i]:
+
+            # If either board is already won for the other side, a win is not possible
+            if (
+                check_win(board[win_coordinates[0]]) == "O"
+                or check_win(board[win_coordinates[0]]) == "O"
+            ):
+                continue
 
             miniboard1_eval = evals[win_coordinates[0]]
             miniboard2_eval = evals[win_coordinates[1]]
@@ -220,7 +277,7 @@ def detail_eval(board):
     return x_eval, o_eval
 
 
-def minimax(board, depth: int):
+def minimax(board, depth: int, alpha, beta, maximizing_player):
     """
     Calculates the best move based on minimax evaluation of the given depth.
     :param board: The board to evaluate from
@@ -228,29 +285,67 @@ def minimax(board, depth: int):
     :return: [board, move] The ideal move for X to make
     """
 
-    root_node = board
-    children = [root_node]
+    if depth == 0 or board.board.game_result is not None:
+        return board.eval
 
-    # Add all the children
-    for i in range(depth):
-        print(f"Depth: {i}")
-        new_children = []
-        for child in children:
-            # Get next moves
-            if len(child.children) == 0:
-                child.add_children()
-            # Add all the children to be expanded on next
-            new_children.extend(child.children)
+    # Initialize with worst possible outcome, so anything else is always better
+    if maximizing_player:
+        best_eval = float("-inf")
+    else:
+        best_eval = float("inf")
 
-        # Next time loop through all the newly added children
-        children = new_children[:]
-        print(len(children))
+    # Add children if necessary
+    if len(board.children) == 0:
+        board.add_children()
 
-    print("Searching best move...")
-    # Find the possible move with the highest evaluation
-    best_move = max(root_node.children, key=lambda x: x.calc_eval_from_children(True))
+    # Get evaluations of all children
+    for child in board.children:
 
-    return best_move
+        # Use recursion to search the tree
+        new_eval = minimax(child, depth - 1, alpha, beta, not maximizing_player)
+
+        # Get next best eval and use alpha beta pruning
+        if maximizing_player:
+            best_eval = max(best_eval, new_eval)
+            alpha = max(alpha, new_eval)
+            if beta <= alpha:
+                break
+        else:
+            best_eval = min(best_eval, new_eval)
+            beta = min(beta, new_eval)
+            if beta <= alpha:
+                break
+
+    return best_eval
+
+
+def minimax_search(board, depth, play_as_o=False):
+    """
+    Search for the best move for X in the given board.
+    :param board: Node, the board to search
+    :param depth: int, the depth of moves to search
+    :return: Node, the best move
+    """
+
+    if len(board.children) == 0:
+        board.add_children()
+
+    # Pruning might not be working optimally b/c the first set of child nodes are all kept separate
+    moves_and_evals = []
+    for i in board.children:
+        moves_and_evals.append(
+            [i, minimax(i, depth - 1, float("-inf"), float("inf"), play_as_o)]
+        )
+
+    if not play_as_o:
+
+        return max(moves_and_evals, key=lambda x: x[1])
+    else:
+        return min(moves_and_evals, key=lambda x: x[1])
+
+
+def minimax_search_move(board, depth, play_as_o=False):
+    return minimax_search(board, depth, play_as_o)[0].board.previous_move
 
 
 class Node:

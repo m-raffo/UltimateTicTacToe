@@ -162,8 +162,13 @@ class GameState:
 
             # Loop every board
             for b in self.board:
+
                 board_index += 1
                 spot_index = -1
+
+                # If the board is won, no moves can be played on it
+                if self.check_win(b) is not None:
+                    continue
 
                 # Loop every spot
                 for spot in b:
@@ -280,10 +285,116 @@ class GameState:
     # Only for display purposes
 
 
+def computer_vs_computer():
+    b = GameState()
+    # current_game_node = mcts.Node(b)
+    #
+    # b.move(0, 4)
+    # b.move(4, 1)
+    # b.move(1, 4)
+    # b.move(2, 8)
+
+    search_depth = 3
+    search_depth2 = 1
+
+    while b.game_result is None:
+        search_node = mcts.Node(b.copy_board())
+        move = mcts.minimax_search_move(search_node, search_depth, False)
+        b.move(move[0], move[1])
+
+        print("COMPUTER 1 MOVE:")
+        print(b.previous_move)
+        print(mcts.detail_eval(b.board))
+        # print(f"MINIMAX: {search_results[1]}")
+        print(b.board)
+        print(b)
+
+        if b.game_result is not None:
+            print("The game is over!")
+            break
+
+        search_node = mcts.Node(b.copy_board())
+        move = mcts.minimax_search_move(search_node, search_depth2, True)
+        b.move(move[0], move[1])
+        print("COMPUTER 2 MOVE:")
+        print(b.previous_move)
+        print(mcts.detail_eval(b.board))
+        # print(f"MINIMAX: {search_results[1]}")
+        print(b.board)
+        print(b)
+
+    print("The game is over!")
+    print(f"RESULT {b.game_result}")
+
+
 if __name__ == "__main__":
+    # computer_vs_computer()
+    #
+    # exit()
+
     b = GameState()
 
     b.to_move = "X"
+
+    b.move(4, 4)
+    b.move(4, 0)
+
+    # b.board_to_move = 5
+    # b.board = [
+    #     [None, None, None, None, None, None, None, None, None],
+    #     [None, None, None, None, None, None, None, None, None],
+    #     ["X", "X", "X", None, None, None, None, None, None],
+    #     [None, None, None, None, None, None, None, None, None],
+    #     ["X", "X", "X", None, None, None, None, None, None],
+    #     [None, None, "X", None, "X", None, None, None, None],
+    #     ["X", "X", None, "X", None, None, None, "O", "O"],
+    #     ["O", "O", "O", None, None, None, None, None, None],
+    #     ["O", "O", "O", None, None, None, None, None, None],
+    # ]
+
+    # b.board_to_move = 3
+    # b.board = [
+    #     ["X", "X", None, "O", None, "X", None, None, None],
+    #     ["O", "O", None, "O", None, "X", None, None, None],
+    #     ["X", "X", "X", None, None, None, None, None, None],
+    #     ["O", "X", None, "X", None, None, None, None, None],
+    #     ["X", "X", "X", None, None, None, None, None, None],
+    #     ["O", "X", "X", "O", "X", None, None, None, None],
+    #     ["X", "X", None, "X", None, None, None, "O", "O"],
+    #     ["O", "O", "O", None, None, None, None, None, None],
+    #     ["O", "O", "O", None, None, None, None, None, None],
+    # ]
+    #
+    # b.to_move = "X"
+    # b.board_to_move = 5
+    # b.board = mcts.flip_board(
+    #     [
+    #         ["X", "X", None, "O", None, "X", None, None, None],
+    #         ["O", "O", None, "O", None, "X", None, None, None],
+    #         ["X", "X", "X", None, None, None, None, None, None],
+    #         ["O", "X", None, "X", None, "X", None, None, None],
+    #         ["X", "X", "X", None, None, None, None, None, None],
+    #         ["O", "X", "X", "O", "X", None, None, None, None],
+    #         ["X", "X", None, "X", None, None, None, "O", "O"],
+    #         ["O", "O", "O", None, None, None, None, None, None],
+    #         ["O", "O", "O", None, None, None, None, None, None],
+    #     ]
+    # )
+
+    b.board_to_move = 4
+    b.board = [
+        ["O", "X", None, None, "X", None, None, "X", None],
+        [None, None, "O", None, None, "O", None, "X", None],
+        [None, "O", "O", "X", "X", "O", None, None, "X"],
+        [None, None, "X", "O", None, "X", None, None, "X"],
+        ["O", None, "O", None, "X", None, None, None, "O"],
+        [None, None, "X", "O", "O", "X", None, None, "O"],
+        ["X", None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, "O", "O", "O"],
+        [None, "X", "X", "O", None, "X", None, "X", "O"],
+    ]
+
+    print(b)
 
     # b.move(4, 5)
     # b.move(5, 1)
@@ -296,6 +407,8 @@ if __name__ == "__main__":
     # print(b)
     #
     current_game_node = mcts.Node(b)
+
+    current_game_node.add_children()
     #
     # print(mcts.eval_board(b.board))
     #
@@ -316,6 +429,9 @@ if __name__ == "__main__":
     #
     # print(a.descendants)
 
+    cProfile.run("print(mcts.minimax_search(current_game_node, 6, False))")
+    exit()
+
     while b.game_result is None:
 
         # print(
@@ -324,15 +440,19 @@ if __name__ == "__main__":
 
         # Have the computer play a move
         # current_game_node = mcts.mcts(current_game_node, 1000, 20)
-        if current_game_node.board.board_to_move is None:
-            current_game_node = mcts.minimax(current_game_node, 3)
-        else:
-            current_game_node = mcts.minimax(current_game_node, 4)
+        # if current_game_node.board.board_to_move is None:
+        #     current_game_node = mcts.minimax_search(current_game_node, 3)
+        # else:
+        #     current_game_node = mcts.minimax(current_game_node, 4)
+
+        search_results = mcts.minimax_search(current_game_node, 4, False)
+        current_game_node = search_results[0]
 
         b = current_game_node.board
         print("COMPUTER MOVE:")
         print(b.previous_move)
         print(mcts.detail_eval(b.board))
+        print(f"MINIMAX: {search_results[1]}")
         print(b.board)
         print(b)
 

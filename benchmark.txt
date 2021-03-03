@@ -1,0 +1,94 @@
+Depth 6
+X to move
+Required board: 4
+ [
+        ["O", "X", None, None, "X", None, None, "X", None],
+        [None, None, "O", None, None, "O", None, "X", None],
+        [None, "O", "O", "X", "X", "O", None, None, "X"],
+        [None, None, "X", "O", None, "X", None, None, "X"],
+        ["O", None, "O", None, "X", None, None, None, "O"],
+        [None, None, "X", "O", "O", "X", None, None, "O"],
+        ["X", None, None, None, None, None, None, None, None],
+        [None, None, None, None, None, None, "O", "O", "O"],
+        [None, "X", "X", "O", None, "X", None, "X", "O"],
+    ]
+O | X |  \\   |   | O\\   | O | O\\
+---------   ---------   ---------
+  | X |  \\   |   | O\\ X | X | O\\
+---------   ---------   ---------
+  | X |  \\   | X |  \\   |   | X\\
+=================================
+  |   | X\\ O |   | O\\   |   | X\\
+---------   ---------   ---------
+O |   | X\\   | X |  \\ O | O | X\\
+---------   ---------   ---------
+  |   | X\\   |   | O\\   |   | O\\
+=================================
+X |   |  \\   |   |  \\   | X | X\\
+---------   ---------   ---------
+  |   |  \\   |   |  \\ O |   | X\\
+---------   ---------   ---------
+  |   |  \\ O | O | O\\   | X | O\\
+=================================
+
+[<mcts.Node object at 0x148242C8>, 583.8233764908629]
+         54749531 function calls (54725722 primitive calls) in 66.735 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  1856178    1.301    0.000   24.081    0.000 <__array_function__ internals>:2(transpose)
+        1    0.000    0.000   66.735   66.735 <string>:1(<module>)
+  1856178    0.680    0.000   13.538    0.000 _asarray.py:23(asarray)
+  1856178    3.957    0.000   18.369    0.000 fromnumeric.py:39(_wrapit)
+  1856178    1.810    0.000   20.468    0.000 fromnumeric.py:52(_wrapfunc)
+  1856178    0.289    0.000    0.289    0.000 fromnumeric.py:598(_transpose_dispatcher)
+  1856178    0.841    0.000   21.309    0.000 fromnumeric.py:602(transpose)
+    62858    0.158    0.000    2.717    0.000 main.py:118(move)
+     5518    0.119    0.000    4.849    0.001 main.py:151(all_possible_moves)
+    62858    0.062    0.000    1.421    0.000 main.py:25(copy_board)
+   375955    1.629    0.000   12.060    0.000 main.py:33(check_win)
+   696753    3.029    0.000    3.245    0.000 main.py:45(check_rows)
+   234679    0.812    0.000    1.659    0.000 main.py:52(check_diagonals)
+   234679    0.287    0.000    0.287    0.000 main.py:53(<listcomp>)
+   219968    0.381    0.000    0.449    0.000 main.py:55(<listcomp>)
+   375955    0.461    0.000    0.461    0.000 main.py:61(<listcomp>)
+    62858    0.025    0.000    0.025    0.000 main.py:82(check_valid_move)
+    29390    0.300    0.000    9.293    0.000 main.py:98(game_result)
+  1480223    5.670    0.000   43.806    0.000 mcts.py:137(check_win)
+  2828350   11.100    0.000   11.999    0.000 mcts.py:148(check_rows)
+   807200    2.716    0.000    5.595    0.000 mcts.py:155(check_diagonals)
+   807200    0.980    0.000    0.980    0.000 mcts.py:156(<listcomp>)
+   752774    1.295    0.000    1.525    0.000 mcts.py:158(<listcomp>)
+  1480223    1.299    0.000    1.299    0.000 mcts.py:164(<listcomp>)
+    35724    1.984    0.000   48.551    0.001 mcts.py:186(calc_significance)
+    35724    0.314    0.000   51.669    0.001 mcts.py:236(eval_board_one_side)
+    17862    0.027    0.000   52.340    0.003 mcts.py:258(eval_board)
+  23814/5    0.056    0.000   66.735   13.347 mcts.py:280(minimax)
+        1    0.000    0.000   66.735   66.735 mcts.py:322(minimax_search)
+   643032    5.113    0.000    5.408    0.000 mcts.py:33(mini_board_eval)
+        5    0.000    0.000    0.000    0.000 mcts.py:342(<lambda>)
+    62858    0.061    0.000    0.061    0.000 mcts.py:352(__init__)
+     5518    0.004    0.000    1.753    0.000 mcts.py:457(is_terminal)
+     5518    0.064    0.000    6.739    0.001 mcts.py:472(add_children)
+    18296    0.033    0.000   58.133    0.003 mcts.py:525(eval)
+    17862    0.442    0.000    0.644    0.000 mcts.py:9(flip_board)
+    62858    0.648    0.000    0.648    0.000 {built-in method _pickle.dumps}
+    62858    0.711    0.000    0.711    0.000 {built-in method _pickle.loads}
+        1    0.000    0.000   66.735   66.735 {built-in method builtins.exec}
+  3712356    0.676    0.000    0.676    0.000 {built-in method builtins.getattr}
+ 18415012    2.169    0.000    2.169    0.000 {built-in method builtins.len}
+     8989    0.003    0.000    0.003    0.000 {built-in method builtins.max}
+    38630    0.018    0.000    0.018    0.000 {built-in method builtins.min}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+  1856178   12.858    0.000   12.858    0.000 {built-in method numpy.array}
+  1856178    1.182    0.000   22.491    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+   326654    0.047    0.000    0.047    0.000 {method 'add' of 'set' objects}
+  2962359    0.430    0.000    0.430    0.000 {method 'append' of 'list' objects}
+  1070554    0.206    0.000    0.206    0.000 {method 'count' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+  1856178    0.487    0.000    0.487    0.000 {method 'transpose' of 'numpy.ndarray' objects}
+
+
+
+Process finished with exit code 0
