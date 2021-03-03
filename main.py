@@ -408,6 +408,7 @@ if __name__ == "__main__":
     #     ]
     # )
 
+    # TEST BOARD
     # b.board_to_move = 4
     # b.board = [
     #     ["O", "X", None, None, "X", None, None, "X", None],
@@ -420,8 +421,8 @@ if __name__ == "__main__":
     #     [None, None, None, None, None, None, "O", "O", "O"],
     #     [None, "X", "X", "O", None, "X", None, "X", "O"],
     # ]
-    #
-    # print(b)
+
+    print(b)
 
     # b.move(4, 5)
     # b.move(5, 1)
@@ -472,7 +473,7 @@ if __name__ == "__main__":
         # else:
         #     current_game_node = mcts.minimax(current_game_node, 4)
 
-        search_results = mcts.minimax_search(current_game_node, 4, False)
+        search_results = mcts.minimax_search(current_game_node, 6, False)
         current_game_node = search_results[0]
 
         b = current_game_node.board
@@ -488,6 +489,10 @@ if __name__ == "__main__":
             break
 
         print("Your move:")
+
+        if len(current_game_node.children) == 0:
+            current_game_node.add_children()
+            print("Adding children")
 
         asking_for_move = True
         while asking_for_move:
@@ -515,6 +520,7 @@ if __name__ == "__main__":
                 print(
                     "Your move was not found as a valid move. Are you sure you entered it correctly?"
                 )
+                print(current_game_node.children)
             else:
                 asking_for_move = False
                 b.move(user_board, user_spot)

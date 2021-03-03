@@ -381,3 +381,81 @@ X |   |  \\   |   |  \\   | X | X\\
 
 
 Process finished with exit code 0
+
+
+
+
+
+
+
+
+
+
+
+
+
+C:\Users\Mason\PycharmProjects\UltimateTicTacToe\venv\Scripts\python.exe C:/Users/Mason/PycharmProjects/UltimateTicTacToe/main.py
+X to move
+Required board: 4
+O | X |  \\   |   | O\\   | O | O\\
+---------   ---------   ---------
+  | X |  \\   |   | O\\ X | X | O\\
+---------   ---------   ---------
+  | X |  \\   | X |  \\   |   | X\\
+=================================
+  |   | X\\ O |   | O\\   |   | X\\
+---------   ---------   ---------
+O |   | X\\   | X |  \\ O | O | X\\
+---------   ---------   ---------
+  |   | X\\   |   | O\\   |   | O\\
+=================================
+X |   |  \\   |   |  \\   | X | X\\
+---------   ---------   ---------
+  |   |  \\   |   |  \\ O |   | X\\
+---------   ---------   ---------
+  |   |  \\ O | O | O\\   | X | O\\
+=================================
+
+[<mcts.Node object at 0x14937970>, 1095.8873016277919]
+         36198985 function calls (36109834 primitive calls) in 65.069 seconds
+
+   Ordered by: standard name
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   65.069   65.069 <string>:1(<module>)
+   260880    0.094    0.000    0.094    0.000 main.py:109(check_valid_move)
+   112861    0.746    0.000    6.783    0.000 main.py:125(game_result)
+   260880    0.465    0.000    3.018    0.000 main.py:145(move)
+    23264    0.403    0.000    9.946    0.000 main.py:178(all_possible_moves)
+   260880    0.208    0.000    6.033    0.000 main.py:25(copy_board)
+  1476340    2.641    0.000    8.802    0.000 main.py:33(check_win)
+  1476340    6.160    0.000    6.160    0.000 main.py:52(check_rows_and_columns_and_diagonals)
+    63029    1.518    0.000    2.203    0.000 mcts.py:11(flip_board)
+  5158767    3.471    0.000   22.129    0.000 mcts.py:137(check_win)
+  5158767   18.657    0.000   18.657    0.000 mcts.py:148(check_rows_and_columns_and_diagonals)
+   126058    4.728    0.000   35.378    0.000 mcts.py:199(calc_significance)
+   126058    1.010    0.000   45.042    0.000 mcts.py:249(eval_board_one_side)
+    63029    0.081    0.000   47.326    0.001 mcts.py:271(eval_board)
+  89156/5    0.179    0.000   65.069   13.014 mcts.py:293(minimax)
+        1    0.000    0.000   65.069   65.069 mcts.py:335(minimax_search)
+  2269044   15.437    0.000   16.671    0.000 mcts.py:35(mini_board_eval)
+        5    0.000    0.000    0.000    0.000 mcts.py:355(<lambda>)
+   260880    0.356    0.000    0.356    0.000 mcts.py:365(__init__)
+    23264    0.013    0.000    1.396    0.000 mcts.py:473(is_terminal)
+    23264    0.246    0.000   11.979    0.001 mcts.py:488(add_children)
+    65892    0.112    0.000   51.395    0.001 mcts.py:541(eval)
+   260880    2.193    0.000    2.193    0.000 {built-in method _pickle.dumps}
+   260880    3.632    0.000    3.632    0.000 {built-in method _pickle.loads}
+        1    0.000    0.000   65.069   65.069 {built-in method builtins.exec}
+  1219733    0.148    0.000    0.148    0.000 {built-in method builtins.len}
+   138743    0.056    0.000    0.056    0.000 {built-in method builtins.max}
+    39560    0.013    0.000    0.013    0.000 {built-in method builtins.min}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.print}
+  1153764    0.158    0.000    0.158    0.000 {method 'add' of 'set' objects}
+ 10613690    1.411    0.000    1.411    0.000 {method 'append' of 'list' objects}
+  5213072    0.935    0.000    0.935    0.000 {method 'count' of 'list' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+
+
+
+Process finished with exit code 0

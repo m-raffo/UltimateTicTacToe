@@ -1,6 +1,9 @@
 import time
+from functools import partial
 from math import sqrt
 from random import choice
+
+from multiprocessing import Pool
 
 import numpy as np
 from numpy import log
@@ -293,7 +296,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player):
     Calculates the best move based on minimax evaluation of the given depth.
     :param board: The board to evaluate from
     :param depth: The number of moves to search into the future
-    :return: [board, move] The ideal move for X to make
+    :return:
     """
 
     if depth == 0 or board.board.game_result is not None:
@@ -342,11 +345,18 @@ def minimax_search(board, depth, play_as_o=False):
         board.add_children()
 
     # Pruning might not be working optimally b/c the first set of child nodes are all kept separate
-    moves_and_evals = []
-    for i in board.children:
-        moves_and_evals.append(
-            [i, minimax(i, depth - 1, float("-inf"), float("inf"), play_as_o)]
-        )
+    minimax_partial = partial(
+        minimax,
+        depth=depth - 1,
+        alpha=float("-inf"),
+        beta=float("inf"),
+        maximizing_player=play_as_o,
+    )
+
+    with Pool(5) as p:
+        evals = p.map(minimax_partial, board.children)
+
+    moves_and_evals = zip(board.children, evals)
 
     if not play_as_o:
 
