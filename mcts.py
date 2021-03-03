@@ -61,18 +61,16 @@ def mini_board_eval(miniboard: list) -> float:
     # Check each row
     for i in range(3):
         row = miniboard[i * 3 : i * 3 + 3]
-        set_row = set(row)
 
         # Check for win
-        if set_row == {"X"}:
+        if row == ["X", "X", "X"]:
             return cw
 
         # Check for loss
-        if set_row == {"O"}:
+        if row == ["O", "O", "O"]:
             return cl
-
         # If row is empty except for x, this is a row winnable in two moves
-        if set_row == {"X", None}:
+        if "O" not in row:
             count = row.count("X")
             if count == 1:
                 r += 1
@@ -87,15 +85,15 @@ def mini_board_eval(miniboard: list) -> float:
         set_row = set(row)
 
         # Check for win
-        if set_row == {"X"}:
+        if row == ["X", "X", "X"]:
             return cw
 
         # Check for loss
-        if set_row == {"O"}:
+        if row == ["O", "O", "O"]:
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
-        if set_row == {"X", None}:
+        if "O" not in row:
             count = row.count("X")
             if count == 1:
                 r += 1
@@ -112,15 +110,15 @@ def mini_board_eval(miniboard: list) -> float:
         set_row = set(row)
 
         # Check for win
-        if set_row == {"X"}:
+        if row == ["X", "X", "X"]:
             return cw
 
         # Check for loss
-        if set_row == {"O"}:
+        if row == ["O", "O", "O"]:
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
-        if set_row == {"X", None}:
+        if "O" not in row:
             count = row.count("X")
             if count == 1:
                 r += 1
@@ -142,41 +140,32 @@ def check_win(board):
     """
 
     # If the board is empty, the game goes on
-    if set(board) == {None}:
-        return None
-
-    def check_rows(b):
-        for row in b:
-            row_set = set(row)
-            if row_set != {None} and len(row_set) == 1:
-                return row[0]
+    if board == [None, None, None, None, None, None, None, None, None]:
         return None
 
     def check_rows_and_columns_and_diagonals(b):
         # Check each row
         for i in range(3):
             row = b[i * 3 : i * 3 + 3]
-            set_row = set(row)
 
             # Check for win
-            if set_row == {"X"}:
+            if row == ["X", "X", "X"]:
                 return "X"
 
             # Check for loss
-            if set_row == {"O"}:
+            if row == ["O", "O", "O"]:
                 return "O"
 
         # Check each column
         for i in range(3):
             row = [b[i], b[i + 3], b[i + 6]]
-            set_row = set(row)
 
             # Check for win
-            if set_row == {"X"}:
+            if row == ["X", "X", "X"]:
                 return "X"
 
             # Check for loss
-            if set_row == {"O"}:
+            if row == ["O", "O", "O"]:
                 return "O"
 
         # Check both diagonals
@@ -184,22 +173,14 @@ def check_win(board):
             [b[0], b[4], b[8]],
             [b[2], b[4], b[6]],
         ]:
-            set_row = set(row)
 
             # Check for win
-            if set_row == {"X"}:
+            if row == ["X", "X", "X"]:
                 return "X"
 
             # Check for loss
-            if set_row == {"O"}:
+            if row == ["O", "O", "O"]:
                 return "O"
-
-    def check_diagonals(b):
-        if len(set([b[i][i] for i in range(len(b))])) == 1:
-            return b[0][0]
-        if len(set([b[i][len(b) - i - 1] for i in range(len(b))])) == 1:
-            return b[0][len(b) - 1]
-        return None
 
     result = check_rows_and_columns_and_diagonals(board)
 

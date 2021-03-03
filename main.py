@@ -53,27 +53,25 @@ class GameState:
             # Check each row
             for i in range(3):
                 row = b[i * 3 : i * 3 + 3]
-                set_row = set(row)
 
                 # Check for win
-                if set_row == {"X"}:
+                if row == ["X", "X", "X"]:
                     return "X"
 
                 # Check for loss
-                if set_row == {"O"}:
+                if row == ["O", "O", "O"]:
                     return "O"
 
             # Check each column
             for i in range(3):
                 row = [b[i], b[i + 3], b[i + 6]]
-                set_row = set(row)
 
                 # Check for win
-                if set_row == {"X"}:
+                if row == ["X", "X", "X"]:
                     return "X"
 
                 # Check for loss
-                if set_row == {"O"}:
+                if row == ["O", "O", "O"]:
                     return "O"
 
             # Check both diagonals
@@ -81,14 +79,13 @@ class GameState:
                 [b[0], b[4], b[8]],
                 [b[2], b[4], b[6]],
             ]:
-                set_row = set(row)
 
                 # Check for win
-                if set_row == {"X"}:
+                if row == ["X", "X", "X"]:
                     return "X"
 
                 # Check for loss
-                if set_row == {"O"}:
+                if row == ["O", "O", "O"]:
                     return "O"
 
         def check_diagonals(b):
@@ -411,20 +408,20 @@ if __name__ == "__main__":
     #     ]
     # )
 
-    b.board_to_move = 4
-    b.board = [
-        ["O", "X", None, None, "X", None, None, "X", None],
-        [None, None, "O", None, None, "O", None, "X", None],
-        [None, "O", "O", "X", "X", "O", None, None, "X"],
-        [None, None, "X", "O", None, "X", None, None, "X"],
-        ["O", None, "O", None, "X", None, None, None, "O"],
-        [None, None, "X", "O", "O", "X", None, None, "O"],
-        ["X", None, None, None, None, None, None, None, None],
-        [None, None, None, None, None, None, "O", "O", "O"],
-        [None, "X", "X", "O", None, "X", None, "X", "O"],
-    ]
-
-    print(b)
+    # b.board_to_move = 4
+    # b.board = [
+    #     ["O", "X", None, None, "X", None, None, "X", None],
+    #     [None, None, "O", None, None, "O", None, "X", None],
+    #     [None, "O", "O", "X", "X", "O", None, None, "X"],
+    #     [None, None, "X", "O", None, "X", None, None, "X"],
+    #     ["O", None, "O", None, "X", None, None, None, "O"],
+    #     [None, None, "X", "O", "O", "X", None, None, "O"],
+    #     ["X", None, None, None, None, None, None, None, None],
+    #     [None, None, None, None, None, None, "O", "O", "O"],
+    #     [None, "X", "X", "O", None, "X", None, "X", "O"],
+    # ]
+    #
+    # print(b)
 
     # b.move(4, 5)
     # b.move(5, 1)
@@ -459,8 +456,8 @@ if __name__ == "__main__":
     #
     # print(a.descendants)
 
-    cProfile.run("print(mcts.minimax_search(current_game_node, 7, False))")
-    exit()
+    # cProfile.run("print(mcts.minimax_search(current_game_node, 7, False))")
+    # exit()
 
     while b.game_result is None:
 
