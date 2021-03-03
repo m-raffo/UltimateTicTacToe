@@ -152,6 +152,48 @@ def check_win(board):
                 return row[0]
         return None
 
+    def check_rows_and_columns_and_diagonals(b):
+        # Check each row
+        for i in range(3):
+            row = b[i * 3 : i * 3 + 3]
+            set_row = set(row)
+
+            # Check for win
+            if set_row == {"X"}:
+                return "X"
+
+            # Check for loss
+            if set_row == {"O"}:
+                return "O"
+
+        # Check each column
+        for i in range(3):
+            row = [b[i], b[i + 3], b[i + 6]]
+            set_row = set(row)
+
+            # Check for win
+            if set_row == {"X"}:
+                return "X"
+
+            # Check for loss
+            if set_row == {"O"}:
+                return "O"
+
+        # Check both diagonals
+        for row in [
+            [b[0], b[4], b[8]],
+            [b[2], b[4], b[6]],
+        ]:
+            set_row = set(row)
+
+            # Check for win
+            if set_row == {"X"}:
+                return "X"
+
+            # Check for loss
+            if set_row == {"O"}:
+                return "O"
+
     def check_diagonals(b):
         if len(set([b[i][i] for i in range(len(b))])) == 1:
             return b[0][0]
@@ -159,21 +201,9 @@ def check_win(board):
             return b[0][len(b) - 1]
         return None
 
-    # Check both rows and columns, return if there is a winner
-    board_width = 3
-    square_board = [
-        board[i : i + board_width] for i in range(0, len(board), board_width)
-    ]
+    result = check_rows_and_columns_and_diagonals(board)
 
-    for new_board in [square_board, np.transpose(square_board)]:
-        result = check_rows(new_board)
-
-        if result:
-            return result
-
-    # Check diagonals
-    result = check_diagonals(new_board)
-    if result:
+    if result is not None:
         return result
 
     # If the board is filled, tie; if not, the game continues
@@ -377,6 +407,9 @@ class Node:
         # The parent node
         self.parent = parent
 
+        # Save eval once calculated
+        self._eval = None
+
         if depth > 0 and parent is None:
             raise RuntimeError("Node defined with depth>1 and parent of None")
 
@@ -529,17 +562,25 @@ class Node:
         :return: float; the evaluation
         """
 
+        if self._eval is not None:
+            return self._eval
+
         # If the game is over, return appropriate value
         result = self.board.game_result
         if result == "X":
-            return float("inf")
+            result = float("inf")
         elif result == "O":
-            return float("-inf")
+            result = float("-inf")
         # If tie return 0
         elif result == False:
-            return 0
+            result = 0
 
-        return eval_board(self.board.board)
+        else:
+
+            result = eval_board(self.board.board)
+
+        self._eval = result
+        return result
 
     def backpropagate(self, result):
         """
