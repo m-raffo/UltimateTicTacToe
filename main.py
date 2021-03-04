@@ -1,5 +1,3 @@
-import numpy as np
-import copy
 import mcts
 import cProfile
 import pickle
@@ -39,14 +37,7 @@ class GameState:
         """
 
         # If the board is empty, the game goes on
-        if set(board) == {None}:
-            return None
-
-        def check_rows(b):
-            for row in b:
-                row_set = set(row)
-                if row_set != {None} and len(row_set) == 1:
-                    return row[0]
+        if set(board) == [None, None, None, None, None, None, None, None, None]:
             return None
 
         def check_rows_and_columns_and_diagonals(b):
@@ -87,13 +78,6 @@ class GameState:
                 # Check for loss
                 if row == ["O", "O", "O"]:
                     return "O"
-
-        def check_diagonals(b):
-            if len(set([b[i][i] for i in range(len(b))])) == 1:
-                return b[0][0]
-            if len(set([b[i][len(b) - i - 1] for i in range(len(b))])) == 1:
-                return b[0][len(b) - 1]
-            return None
 
         result = check_rows_and_columns_and_diagonals(board)
 
@@ -321,8 +305,8 @@ def computer_vs_computer():
     # b.move(1, 4)
     # b.move(2, 8)
 
-    search_depth = 3
-    search_depth2 = 1
+    search_depth = 2
+    search_depth2 = 6
 
     while b.game_result is None:
         search_node = mcts.Node(b.copy_board())
@@ -421,8 +405,8 @@ if __name__ == "__main__":
     #     [None, None, None, None, None, None, "O", "O", "O"],
     #     [None, "X", "X", "O", None, "X", None, "X", "O"],
     # ]
-
-    print(b)
+    #
+    # print(b)
 
     # b.move(4, 5)
     # b.move(5, 1)
@@ -460,6 +444,8 @@ if __name__ == "__main__":
     # cProfile.run("print(mcts.minimax_search(current_game_node, 7, False))")
     # exit()
 
+    # computer_vs_computer()
+
     while b.game_result is None:
 
         # print(
@@ -473,7 +459,7 @@ if __name__ == "__main__":
         # else:
         #     current_game_node = mcts.minimax(current_game_node, 4)
 
-        search_results = mcts.minimax_search(current_game_node, 6, False)
+        search_results = mcts.minimax_search(current_game_node, 8, False)
         current_game_node = search_results[0]
 
         b = current_game_node.board

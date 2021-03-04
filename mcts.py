@@ -2,10 +2,7 @@ import time
 from functools import partial
 from math import sqrt
 from random import choice
-
 from multiprocessing import Pool
-
-import numpy as np
 from numpy import log
 
 
@@ -80,12 +77,12 @@ def mini_board_eval(miniboard: list) -> float:
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
-                winning_index.add(i)
+                # Calculate the location of the empty square in the whole board
+                winning_index.add(i * 3 + row.index(None))
 
     # Check each column
     for i in range(3):
         row = [miniboard[i], miniboard[i + 3], miniboard[i + 6]]
-        set_row = set(row)
 
         # Check for win
         if row == ["X", "X", "X"]:
@@ -103,14 +100,19 @@ def mini_board_eval(miniboard: list) -> float:
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
-                winning_index.add(i)
+                # Calculate the location of the empty square in the whole board
+                winning_index.add(i + row.index(None) * 3)
 
     # Check both diagonals
+
+    # Keep track of which space is which on the miniboard
+    count = 0
+    index_order = [0, 4, 8, 2, 4, 6]
     for row in [
         [miniboard[0], miniboard[4], miniboard[8]],
         [miniboard[2], miniboard[4], miniboard[6]],
     ]:
-        set_row = set(row)
+        count += 1
 
         # Check for win
         if row == ["X", "X", "X"]:
@@ -128,7 +130,9 @@ def mini_board_eval(miniboard: list) -> float:
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
-                winning_index.add(i)
+                # Add the correct index
+                empty_space_index = index_order[row.index(None) + 3 * count]
+                winning_index.add(empty_space_index)
 
     w = len(winning_index)
 
@@ -229,7 +233,6 @@ def calc_significance(board):
     for i in range(9):
         significances.append(1)
         # Check each win possibility
-        # TODO: Check if the win is possible before adding the evals?
         for win_coordinates in win_possibilities[i]:
 
             # If either board is already won for the other side, a win is not possible
@@ -294,6 +297,9 @@ def detail_eval(board):
 def minimax(board, depth: int, alpha, beta, maximizing_player):
     """
     Calculates the best move based on minimax evaluation of the given depth.
+    :param maximizing_player:
+    :param beta:
+    :param alpha:
     :param board: The board to evaluate from
     :param depth: The number of moves to search into the future
     :return:
@@ -336,6 +342,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player):
 def minimax_search(board, depth, play_as_o=False):
     """
     Search for the best move for X in the given board.
+    :param play_as_o:
     :param board: Node, the board to search
     :param depth: int, the depth of moves to search
     :return: Node, the best move
@@ -353,7 +360,7 @@ def minimax_search(board, depth, play_as_o=False):
         maximizing_player=play_as_o,
     )
 
-    with Pool(5) as p:
+    with Pool(16) as p:
         evals = p.map(minimax_partial, board.children)
 
     moves_and_evals = zip(board.children, evals)
@@ -420,7 +427,7 @@ class Node:
         This function should not be called before a rollout is done on the parent (ie self.n = 0)
 
         :param child: Node, the child
-        :param final_score: bool, If true, childen with n=0 with return -inf; If false, children with n=0 will return inf
+        :param final_score: bool, If true, children with n=0 with return -inf; If false, children with n=0 will return inf
         :return: float, the UCB value
         """
 
