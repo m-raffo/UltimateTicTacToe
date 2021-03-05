@@ -296,49 +296,72 @@ class GameState:
     # Only for display purposes
 
 
-def computer_vs_computer():
-    b = GameState()
-    # current_game_node = mcts.Node(b)
-    #
-    # b.move(0, 4)
-    # b.move(4, 1)
-    # b.move(1, 4)
-    # b.move(2, 8)
+def computer_vs_computer(
+    move_function1,
+    depth1,
+    constants1,
+    move_function2,
+    depth2,
+    constants2,
+    starting_gamestate=None,
+    print_moves=False,
+):
 
-    search_depth = 2
-    search_depth2 = 6
+    if starting_gamestate is not None:
+        b = starting_gamestate
+    else:
+        b = GameState()
 
     while b.game_result is None:
-        search_node = mcts.Node(b.copy_board())
-        move = mcts.minimax_search_move(search_node, search_depth, False)
-        b.move(move[0], move[1])
 
-        print("COMPUTER 1 MOVE:")
-        print(b.previous_move)
-        print(mcts.detail_eval(b.board))
-        # print(f"MINIMAX: {search_results[1]}")
-        print(b.board)
-        print(b)
+        # Calculate the first move
+        comp1_move = move_function1(b, depth1, constants=constants1)
+        b.move(*comp1_move)
+
+        if print_moves:
+            print("COMPUTER 1 MOVE:")
+            print(b.previous_move)
+            print(mcts.detail_eval(b.board))
+            # print(f"MINIMAX: {search_results[1]}")
+            print(b.board)
+            print(b)
 
         if b.game_result is not None:
-            print("The game is over!")
+
             break
 
-        search_node = mcts.Node(b.copy_board())
-        move = mcts.minimax_search_move(search_node, search_depth2, True)
-        b.move(move[0], move[1])
-        print("COMPUTER 2 MOVE:")
-        print(b.previous_move)
-        print(mcts.detail_eval(b.board))
-        # print(f"MINIMAX: {search_results[1]}")
-        print(b.board)
-        print(b)
+        # Calculate the second move
+        comp2_move = move_function2(b, depth2, True, constants=constants2)
+        b.move(*comp2_move)
 
-    print("The game is over!")
-    print(f"RESULT {b.game_result}")
+        if print_moves:
+            print("COMPUTER 2 MOVE:")
+            print(b.previous_move)
+            print(mcts.detail_eval(b.board))
+            # print(f"MINIMAX: {search_results[1]}")
+            print(b.board)
+            print(b)
+
+    if print_moves:
+        print("The game is over!")
+        print(f"RESULT {b.game_result}")
+
+    return b.game_result
 
 
 if __name__ == "__main__":
+
+    computer_vs_computer(
+        mcts.minimax_search_move_from_board,
+        6,
+        None,
+        mcts.minimax_search_move_from_board,
+        2,
+        None,
+        print_moves=True,
+    )
+
+    exit()
     # computer_vs_computer()
     #
     # exit()

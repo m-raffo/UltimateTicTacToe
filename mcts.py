@@ -30,7 +30,7 @@ def flip_board(board):
     return flipped_board
 
 
-def mini_board_eval(miniboard: list) -> float:
+def mini_board_eval(miniboard: list, constants=None) -> float:
     """
     Calculates the evaluation of a mini board.
 
@@ -41,17 +41,33 @@ def mini_board_eval(miniboard: list) -> float:
     w = spaces that are winning if taken
     r = rows with one spot taken (ie win in two moves)
 
+    Constants are:
+    c1: the value of a space that is winning if taken
+    c2: the value of a row that can win in two moves
+    cw: the value of an already won board
+    cl: the value of a lost board
+
+    :param constants: Optional, custom constant values to use to evaluate the board
     :param miniboard: The miniboard to evaluate
     :return: The evaluation for X
     """
 
-    # Mini board eval constants
-    c1 = 2
-    c2 = 1
+    if constants is None:
+        # Mini board eval constants
+        c1 = 2
+        c2 = 1
 
-    # Evals of won and lost boards
-    cw = 10
-    cl = 0
+        # Evals of won and lost boards
+        cw = 10
+        cl = 0
+
+    # Use custom constants if specified
+    else:
+        c1 = constants["c1"]
+        c2 = constants["c2"]
+
+        cw = constants["cw"]
+        cl = constants["cl"]
 
     # This will be incremented as matching positions are found
     r = 0
@@ -106,13 +122,13 @@ def mini_board_eval(miniboard: list) -> float:
     # Check both diagonals
 
     # Keep track of which space is which on the miniboard
-    count = 0
+    diagonal_count = -1
     index_order = [0, 4, 8, 2, 4, 6]
     for row in [
         [miniboard[0], miniboard[4], miniboard[8]],
         [miniboard[2], miniboard[4], miniboard[6]],
     ]:
-        count += 1
+        diagonal_count += 1
 
         # Check for win
         if row == ["X", "X", "X"]:
@@ -131,7 +147,7 @@ def mini_board_eval(miniboard: list) -> float:
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Add the correct index
-                empty_space_index = index_order[row.index(None) + 3 * count]
+                empty_space_index = index_order[row.index(None) + 3 * diagonal_count]
                 winning_index.add(empty_space_index)
 
     w = len(winning_index)
@@ -250,9 +266,10 @@ def calc_significance(board):
     return significances
 
 
-def eval_board_one_side(board):
+def eval_board_one_side(board, constants=None):
     """
     Calculate an evaluation of a full board for one side
+    :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information
     :param board: list the board
     :return: float - A number that indicates that extent to which X is winning
     """
@@ -260,7 +277,7 @@ def eval_board_one_side(board):
     miniboard_evals = []
 
     for miniboard in board:
-        miniboard_evals.append(mini_board_eval(miniboard))
+        miniboard_evals.append(mini_board_eval(miniboard, constants))
 
     significances = calc_significance(board)
 
@@ -272,16 +289,17 @@ def eval_board_one_side(board):
     return final_eval
 
 
-def eval_board(board):
+def eval_board(board, constants=None):
     """
     Calculate a full evaluation for both sides of a large board.
+    :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information.
     :param board:
     :return: float - positive indicates that X is winning; negative indicates O is winning
     """
 
-    x_eval = eval_board_one_side(board)
+    x_eval = eval_board_one_side(board, constants)
     flipped = flip_board(board)
-    o_eval = eval_board_one_side(flipped)
+    o_eval = eval_board_one_side(flipped, constants)
 
     return x_eval - o_eval
 
@@ -294,7 +312,7 @@ def detail_eval(board):
     return x_eval, o_eval
 
 
-def minimax(board, depth: int, alpha, beta, maximizing_player):
+def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
     """
     Calculates the best move based on minimax evaluation of the given depth.
     :param maximizing_player:
@@ -306,7 +324,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player):
     """
 
     if depth == 0 or board.board.game_result is not None:
-        return board.eval
+        return board.eval_constants(constants)
 
     # Initialize with worst possible outcome, so anything else is always better
     if maximizing_player:
@@ -322,7 +340,9 @@ def minimax(board, depth: int, alpha, beta, maximizing_player):
     for child in board.children:
 
         # Use recursion to search the tree
-        new_eval = minimax(child, depth - 1, alpha, beta, not maximizing_player)
+        new_eval = minimax(
+            child, depth - 1, alpha, beta, not maximizing_player, constants
+        )
 
         # Get next best eval and use alpha beta pruning
         if maximizing_player:
@@ -339,7 +359,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player):
     return best_eval
 
 
-def minimax_search(board, depth, play_as_o=False):
+def minimax_search(board, depth, play_as_o=False, constants=None):
     """
     Search for the best move for X in the given board.
     :param play_as_o:
@@ -358,6 +378,7 @@ def minimax_search(board, depth, play_as_o=False):
         alpha=float("-inf"),
         beta=float("inf"),
         maximizing_player=play_as_o,
+        constants=constants,
     )
 
     with Pool(16) as p:
@@ -372,8 +393,27 @@ def minimax_search(board, depth, play_as_o=False):
         return min(moves_and_evals, key=lambda x: x[1])
 
 
-def minimax_search_move(board, depth, play_as_o=False):
-    return minimax_search(board, depth, play_as_o)[0].board.previous_move
+def minimax_search_move(board, depth, play_as_o=False, constants=None):
+    """
+    Searches for a move using minimax when given a node.
+    :param board: Node, the board to search from
+    :param depth: int, the depth to search to
+    :param play_as_o: bool, default=False, is the program playing as O
+    :return: [board to move on, piece to play]
+    """
+    return minimax_search(board, depth, play_as_o, constants)[0].board.previous_move
+
+
+def minimax_search_move_from_board(board, depth, play_as_o=False, constants=None):
+    """
+    Searches for a move using minimax when given a GameState.
+    :param board: GameState, the board to search from
+    :param depth: int, the depth to search to
+    :param play_as_o: bool, default=False, is the program playing as O
+    :return: [board to move on, piece to play]
+    """
+
+    return minimax_search_move(Node(board), depth, play_as_o, constants)
 
 
 class Node:
@@ -522,28 +562,28 @@ class Node:
 
         return False
 
-    def calc_eval_from_children(self, get_min=False):
-        """
-        Calculates the evaluation from its children's evaluations, recursively.
-        If there are no children, return its heuristic evaluation.
-        :param get_min: Set to true to get the lowest child evaluation
-        :return: float; the evaluation based on children
-        """
-
-        # If no children, return heuristic evaluation
-        if len(self.children) == 0:
-            return self.eval
-
-        # Get all the evaluations
-        values = []
-        for i in self.children:
-            values.append(i.calc_eval_from_children(not get_min))
-
-        # Flip get_min with each turn
-        if get_min:
-            return min(values)
-
-        return max(values)
+    # def calc_eval_from_children(self, get_min=False):
+    #     """
+    #     Calculates the evaluation from its children's evaluations, recursively.
+    #     If there are no children, return its heuristic evaluation.
+    #     :param get_min: Set to true to get the lowest child evaluation
+    #     :return: float; the evaluation based on children
+    #     """
+    #
+    #     # If no children, return heuristic evaluation
+    #     if len(self.children) == 0:
+    #         return self.eval
+    #
+    #     # Get all the evaluations
+    #     values = []
+    #     for i in self.children:
+    #         values.append(i.calc_eval_from_children(not get_min))
+    #
+    #     # Flip get_min with each turn
+    #     if get_min:
+    #         return min(values)
+    #
+    #     return max(values)
 
     @property
     def ucb(self):
@@ -576,6 +616,25 @@ class Node:
         else:
 
             result = eval_board(self.board.board)
+
+        self._eval = result
+        return result
+
+    def eval_constants(self, constants):
+
+        # If the game is over, return appropriate value
+        result = self.board.game_result
+        if result == "X":
+            result = float("inf")
+        elif result == "O":
+            result = float("-inf")
+        # If tie return 0
+        elif result == False:
+            result = 0
+
+        else:
+
+            result = eval_board(self.board.board, constants)
 
         self._eval = result
         return result
