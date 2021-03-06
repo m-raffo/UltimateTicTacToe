@@ -315,7 +315,7 @@ def computer_vs_computer(
     while b.game_result is None:
 
         # Calculate the first move
-        comp1_move = move_function1(b, depth1, constants=constants1)
+        comp1_move = move_function1(b.copy_board(), depth1, constants=constants1)
         b.move(*comp1_move)
 
         if print_moves:
@@ -331,7 +331,7 @@ def computer_vs_computer(
             break
 
         # Calculate the second move
-        comp2_move = move_function2(b, depth2, True, constants=constants2)
+        comp2_move = move_function2(b.copy_board(), depth2, True, constants=constants2)
         b.move(*comp2_move)
 
         if print_moves:
@@ -351,17 +351,31 @@ def computer_vs_computer(
 
 if __name__ == "__main__":
 
-    computer_vs_computer(
-        mcts.minimax_search_move_from_board,
-        6,
-        None,
-        mcts.minimax_search_move_from_board,
-        2,
-        None,
-        print_moves=True,
-    )
+    c1 = {"c1": 2, "c2": 1, "cw": 10, "cl": 0}
 
-    exit()
+    c2 = {"c1": 0.05, "c2": 3, "cw": 2, "cl": 0}
+
+    # computer_vs_computer(
+    #     mcts.minimax_search_move_from_board,
+    #     2,
+    #     c1,
+    #     mcts.mcts_search_move,
+    #     10000,
+    #     c2,
+    #     print_moves=True,
+    # )
+
+    # computer_vs_computer(
+    #     mcts.mcts_search_move,
+    #     30000,
+    #     c2,
+    #     mcts.minimax_search_move_from_board,
+    #     2,
+    #     c1,
+    #     print_moves=True,
+    # )
+    #
+    # exit()
     # computer_vs_computer()
     #
     # exit()
@@ -370,8 +384,8 @@ if __name__ == "__main__":
 
     b.to_move = "X"
 
-    b.move(4, 4)
-    b.move(4, 0)
+    # b.move(4, 4)
+    # b.move(4, 0)
 
     # b.board_to_move = 5
     # b.board = [
@@ -431,6 +445,20 @@ if __name__ == "__main__":
     #
     # print(b)
 
+    # Ongoing game
+    b.board_to_move = 6
+    b.board = [
+        ["O", None, None, "X", "X", "X", None, None, "O", None],
+        ["X", None, "O", None, None, None, None, "X", None],
+        ["O", "X", None, "X", "X", None, "O", None, None],
+        ["O", "O", "O", None, "X", None, None, "X", None],
+        [None, None, "X", "O", "X", "O", "O", "O", "O"],
+        [None, None, None, None, "O", "X", "O", None, "X"],
+        [None, None, None, None, "X", None, None, None, "X"],
+        [None, "O", "O", "O", None, "X", None, "X", None],
+        ["X", None, None, "X", None, "O", None, None, "O"],
+    ]
+
     # b.move(4, 5)
     # b.move(5, 1)
     # b.move(1, 5)
@@ -484,6 +512,8 @@ if __name__ == "__main__":
 
         search_results = mcts.minimax_search(current_game_node, 8, False)
         current_game_node = search_results[0]
+
+        # current_game_node = mcts.mcts(current_game_node, 30000)
 
         b = current_game_node.board
         print("COMPUTER MOVE:")

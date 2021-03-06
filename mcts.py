@@ -359,6 +359,33 @@ def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
     return best_eval
 
 
+def minimax_search_async(callback, board, depth, play_as_o=False, constants=None):
+
+    if len(board.children) == 0:
+        board.add_children()
+
+    # Pruning might not be working optimally b/c the first set of child nodes are all kept separate
+    minimax_partial = partial(
+        minimax,
+        depth=depth - 1,
+        alpha=float("-inf"),
+        beta=float("inf"),
+        maximizing_player=play_as_o,
+        constants=constants,
+    )
+
+    with Pool() as p:
+        evals = p.map_async(minimax_partial, board.children, callback=callback)
+
+    moves_and_evals = zip(board.children, evals)
+
+    if not play_as_o:
+
+        return max(moves_and_evals, key=lambda x: x[1])
+    else:
+        return min(moves_and_evals, key=lambda x: x[1])
+
+
 def minimax_search(board, depth, play_as_o=False, constants=None):
     """
     Search for the best move for X in the given board.
@@ -381,7 +408,7 @@ def minimax_search(board, depth, play_as_o=False, constants=None):
         constants=constants,
     )
 
-    with Pool(16) as p:
+    with Pool() as p:
         evals = p.map(minimax_partial, board.children)
 
     moves_and_evals = zip(board.children, evals)
@@ -696,7 +723,8 @@ def mcts(
     :return: Node, the node with the highest score (ie the recommended move)
     """
 
-    print(start_node.board)
+    if verbose:
+        print(start_node.board)
 
     def main_loop():
         if verbose:
@@ -763,3 +791,24 @@ def mcts(
 
     # After all iterations are done, return the child node with this highest UCB1
     return max(start_node.children, key=lambda child: child.final_score)
+
+
+def mcts_search_move(start_board, depth, play_as_o=False, constants=None):
+    """
+
+    :param start_board: Board as a GameState
+    :param depth: Number of iterations to perform
+    :param play_as_o: bool
+    :param constants: Not used
+    :return:
+    """
+
+    board = start_board.copy_board()
+
+    if play_as_o:
+        board.board = flip_board(board.board)
+        board.to_move = "X"
+
+    board_node = Node(board)
+
+    return mcts(board_node, depth).board.previous_move
