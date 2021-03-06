@@ -23,7 +23,7 @@ BOARD_BUFFER_Y = 25
 
 
 HUMAN_PLAY_AS_O = True
-DEPTH = 8
+DEPTH = 5
 
 
 def draw_game(screen, game):
@@ -170,8 +170,6 @@ def draw_board(screen):
                     (board_start_x + line_width - BOARD_BUFFER_X, line_y),
                 )
 
-    pygame.display.flip()
-
 
 def mouse_pos_to_board_and_piece(mouse_pos):
     x_coord = int(
@@ -262,7 +260,6 @@ def draw_move(screen, board, piece, text, font, color=None):
     draw_y = piece_start_y + 0.5 * (board_height / 3) - 0.5 * img.get_height()
 
     screen.blit(img, (draw_x, draw_y))
-    pygame.display.flip()
 
 
 def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100)):
@@ -276,9 +273,7 @@ def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100
 
     # Draw the background
     pygame.draw.rect(
-        screen,
-        bg_color,
-        pygame.Rect(rectx, recty, width, height),
+        screen, bg_color, pygame.Rect(rectx, recty, width, height),
     )
 
     # Draw the text
@@ -323,7 +318,7 @@ if __name__ == "__main__":
 
     while running:
 
-        if not is_players_move:
+        if not is_players_move and game.game_result is None:
             if minimax_results.ready():
                 p.close()
                 p.terminate()
@@ -415,6 +410,7 @@ if __name__ == "__main__":
                 screen.fill((255, 255, 255))
 
                 print(game.to_move)
+                print(game)
 
                 draw_game(screen, game)
 
