@@ -322,7 +322,6 @@ def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
     :param depth: The number of moves to search into the future
     :return:
     """
-
     if depth == 0 or board.board.game_result is not None:
         return board.eval_constants(constants)
 
@@ -359,7 +358,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
     return best_eval
 
 
-def minimax_search_async(callback, board, depth, play_as_o=False, constants=None):
+def minimax_search_async(board, depth, play_as_o=False, constants=None):
 
     if len(board.children) == 0:
         board.add_children()
@@ -374,16 +373,10 @@ def minimax_search_async(callback, board, depth, play_as_o=False, constants=None
         constants=constants,
     )
 
-    with Pool() as p:
-        evals = p.map_async(minimax_partial, board.children, callback=callback)
+    p = Pool()
+    evals = p.map_async(minimax_partial, board.children)
 
-    moves_and_evals = zip(board.children, evals)
-
-    if not play_as_o:
-
-        return max(moves_and_evals, key=lambda x: x[1])
-    else:
-        return min(moves_and_evals, key=lambda x: x[1])
+    return evals, p
 
 
 def minimax_search(board, depth, play_as_o=False, constants=None):
