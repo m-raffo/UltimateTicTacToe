@@ -273,7 +273,9 @@ def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100
 
     # Draw the background
     pygame.draw.rect(
-        screen, bg_color, pygame.Rect(rectx, recty, width, height),
+        screen,
+        bg_color,
+        pygame.Rect(rectx, recty, width, height),
     )
 
     # Draw the text
@@ -300,6 +302,8 @@ if __name__ == "__main__":
 
     big_font = pygame.font.SysFont(None, 425)
     med_font = pygame.font.SysFont(None, 200)
+
+    small_font = pygame.font.SysFont(None, 30)
 
     is_players_move = False
 

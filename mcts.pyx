@@ -379,6 +379,32 @@ def minimax_search_async(board, depth, play_as_o=False, constants=None):
     return evals, p
 
 
+def minimax_search_seq(board, depth, play_as_o=False, constants=None):
+    """
+    Search for the best move without using multiprocessing.
+    :param board:
+    :param depth:
+    :param play_as_o:
+    :param constants:
+    :return:
+    """
+
+    if len(board.children) == 0:
+        board.add_children()
+
+    moves_and_evals = []
+    for i in board.children:
+        moves_and_evals.append(
+            [i, minimax(i, depth - 1, float("-inf"), float("inf"), play_as_o)]
+        )
+
+    if not play_as_o:
+
+        return max(moves_and_evals, key=lambda x: x[1])
+    else:
+        return min(moves_and_evals, key=lambda x: x[1])
+
+
 def minimax_search(board, depth, play_as_o=False, constants=None):
     """
     Search for the best move for X in the given board.
