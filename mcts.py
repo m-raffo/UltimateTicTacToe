@@ -6,6 +6,13 @@ from multiprocessing import Pool
 from numpy import log
 
 
+# NOTE:
+# All X's have been replaced with 1
+# ALL O's have been replaced with -1
+# All Empty Spaces/None have been replaced with 0
+# This is to allow for greater optimization in cython and numpy arrays
+
+
 def flip_board(board):
     """
     Flips the X and O pieces on a large scale board.
@@ -20,12 +27,12 @@ def flip_board(board):
         # Flip X and O in every list
         # I is just an intermediary character, no other significance
         for spot in i:
-            if spot == "O":
-                flipped_board[-1].append("X")
-            elif spot == "X":
-                flipped_board[-1].append("O")
+            if spot == -1:
+                flipped_board[-1].append(1)
+            elif spot == 1:
+                flipped_board[-1].append(-1)
             else:
-                flipped_board[-1].append(None)
+                flipped_board[-1].append(0)
 
     return flipped_board
 
@@ -79,45 +86,45 @@ def mini_board_eval(miniboard: list, constants=None) -> float:
         row = miniboard[i * 3 : i * 3 + 3]
 
         # Check for win
-        if row == ["X", "X", "X"]:
+        if row == [1, 1, 1]:
             return cw
 
         # Check for loss
-        if row == ["O", "O", "O"]:
+        if row == [-1, -1, -1]:
             return cl
         # If row is empty except for x, this is a row winnable in two moves
-        if "O" not in row:
-            count = row.count("X")
+        if -1 not in row:
+            count = row.count(1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Calculate the location of the empty square in the whole board
-                winning_index.add(i * 3 + row.index(None))
+                winning_index.add(i * 3 + row.index(0))
 
     # Check each column
     for i in range(3):
         row = [miniboard[i], miniboard[i + 3], miniboard[i + 6]]
 
         # Check for win
-        if row == ["X", "X", "X"]:
+        if row == [1, 1, 1]:
             return cw
 
         # Check for loss
-        if row == ["O", "O", "O"]:
+        if row == [-1, -1, -1]:
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
-        if "O" not in row:
-            count = row.count("X")
+        if -1 not in row:
+            count = row.count(1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Calculate the location of the empty square in the whole board
-                winning_index.add(i + row.index(None) * 3)
+                winning_index.add(i + row.index(0) * 3)
 
     # Check both diagonals
 
@@ -131,23 +138,23 @@ def mini_board_eval(miniboard: list, constants=None) -> float:
         diagonal_count += 1
 
         # Check for win
-        if row == ["X", "X", "X"]:
+        if row == [1, 1, 1]:
             return cw
 
         # Check for loss
-        if row == ["O", "O", "O"]:
+        if row == [-1, -1, -1]:
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
-        if "O" not in row:
-            count = row.count("X")
+        if -1 not in row:
+            count = row.count(1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Add the correct index
-                empty_space_index = index_order[row.index(None) + 3 * diagonal_count]
+                empty_space_index = index_order[row.index(0) + 3 * diagonal_count]
                 winning_index.add(empty_space_index)
 
     w = len(winning_index)
@@ -159,11 +166,11 @@ def check_win(board):
     """
     Checks if the given board is a win (ie three in a row)
     :param board: A list of the board
-    :return: 'X' if x is winning, 'O' if o is winning, None if neither is winning and the game goes on, False if a tie
+    :return: 1 if x is winning, -1 if o is winning, None if neither is winning and the game goes on, 0 if a tie
     """
 
     # If the board is empty, the game goes on
-    if board == [None, None, None, None, None, None, None, None, None]:
+    if board == [0, 0, 0, 0, 0, 0, 0, 0, 0]:
         return None
 
     def check_rows_and_columns_and_diagonals(b):
@@ -172,24 +179,24 @@ def check_win(board):
             row = b[i * 3 : i * 3 + 3]
 
             # Check for win
-            if row == ["X", "X", "X"]:
-                return "X"
+            if row == [1, 1, 1]:
+                return 1
 
             # Check for loss
-            if row == ["O", "O", "O"]:
-                return "O"
+            if row == [-1, -1, -1]:
+                return -1
 
         # Check each column
         for i in range(3):
             row = [b[i], b[i + 3], b[i + 6]]
 
             # Check for win
-            if row == ["X", "X", "X"]:
-                return "X"
+            if row == [1, 1, 1]:
+                return 1
 
             # Check for loss
-            if row == ["O", "O", "O"]:
-                return "O"
+            if row == [-1, -1, -1]:
+                return -1
 
         # Check both diagonals
         for row in [
@@ -198,12 +205,12 @@ def check_win(board):
         ]:
 
             # Check for win
-            if row == ["X", "X", "X"]:
-                return "X"
+            if row == [1, 1, 1]:
+                return 1
 
             # Check for loss
-            if row == ["O", "O", "O"]:
-                return "O"
+            if row == [-1, -1, -1]:
+                return -1
 
     result = check_rows_and_columns_and_diagonals(board)
 
@@ -211,7 +218,7 @@ def check_win(board):
         return result
 
     # If the board is filled, tie; if not, the game continues
-    if None in board:
+    if 0 in board:
         return None
 
     return False
@@ -252,9 +259,14 @@ def calc_significance(board):
         for win_coordinates in win_possibilities[i]:
 
             # If either board is already won for the other side, a win is not possible
+            # or if either board is already drawn
+            game_results0 = check_win(board[win_coordinates[0]])
+            game_results1 = check_win(board[win_coordinates[1]])
             if (
-                check_win(board[win_coordinates[0]]) == "O"
-                or check_win(board[win_coordinates[0]]) == "O"
+                game_results0 == 0
+                or game_results0 == -1
+                or game_results1 == 0
+                or game_results1 == -1
             ):
                 continue
 
@@ -557,11 +569,11 @@ class Node:
         result = temp_board.game_result
 
         # If win
-        if (result == "X" and play_x) or (result == "O" and not play_x):
+        if (result == 1 and play_x) or (result == -1 and not play_x):
             return 1
 
         # If lose
-        elif (result == "O" and play_x) or (result == "X" and not play_x):
+        elif (result == -1 and play_x) or (result == 1 and not play_x):
             return -1
 
         # If tie
@@ -651,9 +663,9 @@ class Node:
 
         # If the game is over, return appropriate value
         result = self.board.game_result
-        if result == "X":
+        if result == 1:
             result = float("inf")
-        elif result == "O":
+        elif result == -1:
             result = float("-inf")
         # If tie return 0
         elif result == False:
@@ -670,9 +682,9 @@ class Node:
 
         # If the game is over, return appropriate value
         result = self.board.game_result
-        if result == "X":
+        if result == 1:
             result = float("inf")
-        elif result == "O":
+        elif result == -1:
             result = float("-inf")
         # If tie return 0
         elif result == False:
@@ -826,7 +838,7 @@ def mcts_search_move(start_board, depth, play_as_o=False, constants=None):
 
     if play_as_o:
         board.board = flip_board(board.board)
-        board.to_move = "X"
+        board.to_move = 1
 
     board_node = Node(board)
 

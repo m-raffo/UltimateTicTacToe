@@ -23,7 +23,7 @@ BOARD_BUFFER_Y = 25
 
 
 HUMAN_PLAY_AS_O = True
-DEPTH = 5
+DEPTH = 2
 
 
 def draw_game(screen, game):
@@ -48,10 +48,10 @@ def draw_game(screen, game):
                 SCREEN_HEIGHT - 2 * BOARD_BUFFER_Y
             ) / 3 * board_y + BOARD_BUFFER_Y
 
-            if miniboard_status == "X":
+            if miniboard_status == 1:
                 img = big_font.render("X", True, (200, 100, 100))
 
-            elif miniboard_status == "O":
+            elif miniboard_status == -1:
                 img = big_font.render("O", True, (100, 100, 200))
 
             else:
@@ -70,14 +70,14 @@ def draw_game(screen, game):
             for spot in miniboard:
                 spot_index += 1
 
-                if spot == "X":
+                if spot == 1:
                     draw_move(screen, board_index, spot_index, "X", font)
 
-                if spot == "O":
+                elif spot == -1:
                     draw_move(screen, board_index, spot_index, "O", font)
 
     if game.board_to_move is not None:
-        if game.to_move == "O":
+        if game.to_move == -1:
             box_board(screen, game.board_to_move, (100, 100, 200))
         else:
             box_board(screen, game.board_to_move, (200, 100, 100))
@@ -352,9 +352,9 @@ if __name__ == "__main__":
 
                 result = game.game_result
                 if result is not None:
-                    if result == "X":
+                    if result == 1:
                         display_message(screen, "X WINS!")
-                    elif result == "O":
+                    elif result == -1:
                         display_message(screen, "O WINS!")
                     elif result == False:
                         display_message(screen, "TIE GAME!")
@@ -420,9 +420,9 @@ if __name__ == "__main__":
 
                 result = game.game_result
                 if result is not None:
-                    if result == "X":
+                    if result == 1:
                         display_message(screen, "X WINS!")
-                    elif result == "O":
+                    elif result == -1:
                         display_message(screen, "O WINS!")
                     elif result == False:
                         display_message(screen, "TIE GAME!")

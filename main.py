@@ -10,13 +10,15 @@ class GameState:
         self.board = []
 
         # Which piece's turn is it?
-        self.to_move = "X"
+        # 1 = X
+        # -1 = O
+        self.to_move = 1
 
         # Which board must they move on, none if there is no requirement
         self.board_to_move = None
         for i in range(9):
             # Add an empty board
-            self.board.append([None] * 9)
+            self.board.append([0] * 9)
 
         self.previous_move = None
 
@@ -37,7 +39,7 @@ class GameState:
         """
 
         # If the board is empty, the game goes on
-        if set(board) == [None, None, None, None, None, None, None, None, None]:
+        if board == [0, 0, 0, 0, 0, 0, 0, 0, 0]:
             return None
 
         def check_rows_and_columns_and_diagonals(b):
@@ -46,24 +48,24 @@ class GameState:
                 row = b[i * 3 : i * 3 + 3]
 
                 # Check for win
-                if row == ["X", "X", "X"]:
-                    return "X"
+                if row == [1, 1, 1]:
+                    return 1
 
                 # Check for loss
-                if row == ["O", "O", "O"]:
-                    return "O"
+                if row == [-1, -1, -1]:
+                    return -1
 
             # Check each column
             for i in range(3):
                 row = [b[i], b[i + 3], b[i + 6]]
 
                 # Check for win
-                if row == ["X", "X", "X"]:
-                    return "X"
+                if row == [1, 1, 1]:
+                    return 1
 
                 # Check for loss
-                if row == ["O", "O", "O"]:
-                    return "O"
+                if row == [-1, -1, -1]:
+                    return -1
 
             # Check both diagonals
             for row in [
@@ -72,12 +74,12 @@ class GameState:
             ]:
 
                 # Check for win
-                if row == ["X", "X", "X"]:
-                    return "X"
+                if row == [1, 1, 1]:
+                    return 1
 
                 # Check for loss
-                if row == ["O", "O", "O"]:
-                    return "O"
+                if row == [-1, -1, -1]:
+                    return -1
 
         result = check_rows_and_columns_and_diagonals(board)
 
@@ -85,7 +87,7 @@ class GameState:
             return result
 
         # If the board is filled, tie; if not, the game continues
-        if None in board:
+        if 0 in board:
             return None
 
         return False
@@ -122,7 +124,13 @@ class GameState:
         full_board_results = []
 
         for i in self.board:
-            full_board_results.append(self.check_win(i))
+            miniboard_result = self.check_win(i)
+
+            # If the game is ongoing, the space is effectively empty
+            if miniboard_result is None:
+                full_board_results.append(0)
+            else:
+                full_board_results.append(miniboard_result)
 
         return self.check_win(full_board_results)
 
@@ -141,12 +149,7 @@ class GameState:
         self.board[board][spot] = self.to_move
 
         # Update to move
-        if self.to_move == "X":
-            self.to_move = "O"
-        elif self.to_move == "O":
-            self.to_move = "X"
-        else:
-            raise RuntimeError(f"Unexpected value of self.to_move '{self.to_move}'")
+        self.to_move *= -1
 
         # Update board
 
@@ -186,7 +189,7 @@ class GameState:
                     spot_index += 1
 
                     # Add a move for every empty spot
-                    if spot is None:
+                    if spot == 0:
                         new_move = self.copy_board()
 
                         new_move.move(board_index, spot_index)
@@ -200,33 +203,35 @@ class GameState:
             for spot in self.board[self.board_to_move]:
                 spot_index += 1
 
-                if spot is None:
+                if spot == 0:
                     new_move = self.copy_board()
                     new_move.move(self.board_to_move, spot_index)
                     possibilities.append(new_move)
 
         return possibilities
 
-    @staticmethod
-    def board_to_str(b):
-        result = []
-        n = 3
-
-        # Replace empty squares with spaces for display
-        index = -1
-        for i in b:
-            index += 1
-            if i is None:
-                b[index] = " "
-
-        # Loop through each tow
-        for row in [b[i : i + n] for i in range(0, len(b), n)]:
-            result.append("|".join(row))
-            result[-1] = result[-1].replace("None", " ")
-            result.append("-" * len(result[0 - 1]))
-
-        # Chop off the last set of '--------'
-        return "\n".join(result[:-1])
+    # @staticmethod
+    # def board_to_str(b):
+    #     result = []
+    #     n = 3
+    #
+    #     # Replace empty squares with spaces for display
+    #     index = -1
+    #     for i in b:
+    #         index += 1
+    #         if i == 0:
+    #             b[index] = " "
+    #
+    #     # Loop through each tow
+    #     for row in [b[i : i + n] for i in range(0, len(b), n)]:
+    #         result.append("|".join(row))
+    #         result[-1] = result[-1].replace("None", " ")
+    #         result.append("-" * len(result[0 - 1]))
+    #
+    #     # Chop off the last set of '--------' and replace numbers with letters
+    #     return (
+    #         "\n".join(result[:-1]).replace("-1", -1).replace("1", "X").replace("0", " ")
+    #     )
 
     @staticmethod
     def absolute_index_to_board_and_piece(index):
@@ -278,10 +283,10 @@ class GameState:
                         absolute_piece_index
                     )
 
-                    # Replace None with empty space
+                    # Replace 0 with empty space
                     piece_char = self.board[board_index][piece_index] or " "
 
-                    result += piece_char
+                    result += str(piece_char)
                     result += " | "
                 result = result[:-3] + "\\\\ "
 
@@ -290,7 +295,7 @@ class GameState:
             else:
                 result += "\n=================================\n"
 
-        return result.replace("O", "\033[94mO\033[0m").replace("X", "\033[31mX\033[0m")
+        return result.replace("-1", "\033[94mO\033[0m").replace("1", "\033[31mX\033[0m")
 
     # Save the previous move in the format [board, spot]
     # Only for display purposes
@@ -382,65 +387,65 @@ if __name__ == "__main__":
 
     b = GameState()
 
-    b.to_move = "X"
+    b.to_move = 1
 
     # b.move(4, 4)
     # b.move(4, 0)
 
     # b.board_to_move = 5
     # b.board = [
-    #     [None, None, None, None, None, None, None, None, None],
-    #     [None, None, None, None, None, None, None, None, None],
-    #     ["X", "X", "X", None, None, None, None, None, None],
-    #     [None, None, None, None, None, None, None, None, None],
-    #     ["X", "X", "X", None, None, None, None, None, None],
-    #     [None, None, "X", None, "X", None, None, None, None],
-    #     ["X", "X", None, "X", None, None, None, "O", "O"],
-    #     ["O", "O", "O", None, None, None, None, None, None],
-    #     ["O", "O", "O", None, None, None, None, None, None],
+    #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #     [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #     [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 1, 0, 1, 0, 0, 0, 0],
+    #     [1, 1, 0, 1, 0, 0, 0, -1, -1],
+    #     [-1, -1, -1, 0, 0, 0, 0, 0, 0],
+    #     [-1, -1, -1, 0, 0, 0, 0, 0, 0],
     # ]
 
     # b.board_to_move = 3
     # b.board = [
-    #     ["X", "X", None, "O", None, "X", None, None, None],
-    #     ["O", "O", None, "O", None, "X", None, None, None],
-    #     ["X", "X", "X", None, None, None, None, None, None],
-    #     ["O", "X", None, "X", None, None, None, None, None],
-    #     ["X", "X", "X", None, None, None, None, None, None],
-    #     ["O", "X", "X", "O", "X", None, None, None, None],
-    #     ["X", "X", None, "X", None, None, None, "O", "O"],
-    #     ["O", "O", "O", None, None, None, None, None, None],
-    #     ["O", "O", "O", None, None, None, None, None, None],
+    #     [1, 1, 0, -1, 0, 1, 0, 0, 0],
+    #     [-1, -1, 0, -1, 0, 1, 0, 0, 0],
+    #     [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #     [-1, 1, 0, 1, 0, 0, 0, 0, 0],
+    #     [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #     [-1, 1, 1, -1, 1, 0, 0, 0, 0],
+    #     [1, 1, 0, 1, 0, 0, 0, -1, -1],
+    #     [-1, -1, -1, 0, 0, 0, 0, 0, 0],
+    #     [-1, -1, -1, 0, 0, 0, 0, 0, 0],
     # ]
     #
-    # b.to_move = "X"
+    # b.to_move = 1
     # b.board_to_move = 5
     # b.board = mcts.flip_board(
     #     [
-    #         ["X", "X", None, "O", None, "X", None, None, None],
-    #         ["O", "O", None, "O", None, "X", None, None, None],
-    #         ["X", "X", "X", None, None, None, None, None, None],
-    #         ["O", "X", None, "X", None, "X", None, None, None],
-    #         ["X", "X", "X", None, None, None, None, None, None],
-    #         ["O", "X", "X", "O", "X", None, None, None, None],
-    #         ["X", "X", None, "X", None, None, None, "O", "O"],
-    #         ["O", "O", "O", None, None, None, None, None, None],
-    #         ["O", "O", "O", None, None, None, None, None, None],
+    #         [1, 1, 0, -1, 0, 1, 0, 0, 0],
+    #         [-1, -1, 0, -1, 0, 1, 0, 0, 0],
+    #         [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #         [-1, 1, 0, 1, 0, 1, 0, 0, 0],
+    #         [1, 1, 1, 0, 0, 0, 0, 0, 0],
+    #         [-1, 1, 1, -1, 1, 0, 0, 0, 0],
+    #         [1, 1, 0, 1, 0, 0, 0, -1, -1],
+    #         [-1, -1, -1, 0, 0, 0, 0, 0, 0],
+    #         [-1, -1, -1, 0, 0, 0, 0, 0, 0],
     #     ]
     # )
 
     # TEST BOARD
     # b.board_to_move = 4
     # b.board = [
-    #     ["O", "X", None, None, "X", None, None, "X", None],
-    #     [None, None, "O", None, None, "O", None, "X", None],
-    #     [None, "O", "O", "X", "X", "O", None, None, "X"],
-    #     [None, None, "X", "O", None, "X", None, None, "X"],
-    #     ["O", None, "O", None, "X", None, None, None, "O"],
-    #     [None, None, "X", "O", "O", "X", None, None, "O"],
-    #     ["X", None, None, None, None, None, None, None, None],
-    #     [None, None, None, None, None, None, "O", "O", "O"],
-    #     [None, "X", "X", "O", None, "X", None, "X", "O"],
+    #     [-1, 1, 0, 0, 1, 0, 0, 1, 0],
+    #     [0, 0, -1, 0, 0, -1, 0, 1, 0],
+    #     [0, -1, -1, 1, 1, -1, 0, 0, 1],
+    #     [0, 0, 1, -1, 0, 1, 0, 0, 1],
+    #     [-1, 0, -1, 0, 1, 0, 0, 0, -1],
+    #     [0, 0, 1, -1, -1, 1, 0, 0, -1],
+    #     [1, 0, 0, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, -1, -1, -1],
+    #     [0, 1, 1, -1, 0, 1, 0, 1, -1],
     # ]
     #
     # print(b)
@@ -448,15 +453,15 @@ if __name__ == "__main__":
     # Ongoing game
     b.board_to_move = 6
     b.board = [
-        ["O", None, None, "X", "X", "X", None, None, "O", None],
-        ["X", None, "O", None, None, None, None, "X", None],
-        ["O", "X", None, "X", "X", None, "O", None, None],
-        ["O", "O", "O", None, "X", None, None, "X", None],
-        [None, None, "X", "O", "X", "O", "O", "O", "O"],
-        [None, None, None, None, "O", "X", "O", None, "X"],
-        [None, None, None, None, "X", None, None, None, "X"],
-        [None, "O", "O", "O", None, "X", None, "X", None],
-        ["X", None, None, "X", None, "O", None, None, "O"],
+        [-1, 0, 0, 1, 1, 1, 0, 0, -1, 0],
+        [1, 0, -1, 0, 0, 0, 0, 1, 0],
+        [-1, 1, 0, 1, 1, 0, -1, 0, 0],
+        [-1, -1, -1, 0, 1, 0, 0, 1, 0],
+        [0, 0, 1, -1, 1, -1, -1, -1, -1],
+        [0, 0, 0, 0, -1, 1, -1, 0, 1],
+        [0, 0, 0, 0, 1, 0, 0, 0, 1],
+        [0, -1, -1, -1, 0, 1, 0, 1, 0],
+        [1, 0, 0, 1, 0, -1, 0, 0, -1],
     ]
 
     # b.move(4, 5)
@@ -568,5 +573,5 @@ if __name__ == "__main__":
         print(b.board)
         print(b)
 
-    if b.game_result == "O":
+    if b.game_result == -1:
         print("You have won!!")
