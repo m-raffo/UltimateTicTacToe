@@ -3,7 +3,7 @@ from gamestate import GameState
 import mcts
 import timeit
 
-import mctsold
+# import mctsold
 import numpy as np
 
 # TEST BOARD
@@ -21,7 +21,8 @@ b.board = np.array(
         [1, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, -1, -1, -1],
         [0, 1, 1, -1, 0, 1, 0, 1, -1],
-    ]
+    ],
+    dtype=np.int32,
 )
 
 print(b)
@@ -31,8 +32,6 @@ current_game_node = mcts.Node(b)
 current_game_node.add_children()
 
 print(current_game_node)
-for i in current_game_node.children:
-    print(i)
 
 
 if __name__ == "__main__":
@@ -65,7 +64,9 @@ if __name__ == "__main__":
     #     exit()
 
     py_command = "print(mctsold.minimax_search_seq(current_game_node, 2, False))"
-    cy_command = "print(mcts.minimax_search_seq(current_game_node, 6, False))"
+    cy_command = (
+        "print(mcts.minimax_search_seq_pruning(current_game_node, 4, 6, False))"
+    )
 
     # cProfile.run(cy_command)
     cProfile.run(cy_command)

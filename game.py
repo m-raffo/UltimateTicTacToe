@@ -24,7 +24,8 @@ BOARD_BUFFER_Y = 25
 
 
 HUMAN_PLAY_AS_O = True
-DEPTH = 4
+DEPTH1 = 4
+DEPTH2 = 6
 
 
 def draw_game(screen, game):
@@ -291,9 +292,7 @@ def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100
 
     # Draw the background
     pygame.draw.rect(
-        screen,
-        bg_color,
-        pygame.Rect(rectx, recty, width, height),
+        screen, bg_color, pygame.Rect(rectx, recty, width, height),
     )
 
     # Draw the text
@@ -377,7 +376,8 @@ if __name__ == "__main__":
 
                     game_running = False
 
-        for event in pygame.event.get():
+        if is_players_move and game_running:
+            event = pygame.event.wait()
 
             # Did the user hit a key?
 
@@ -447,10 +447,13 @@ if __name__ == "__main__":
                     game_running = False
                     continue
 
-                minimax_results, p = mcts.minimax_search_async(
-                    minimax_node, DEPTH, not HUMAN_PLAY_AS_O
+                minimax_results, p = mcts.minimax_search_pruning_async(
+                    minimax_node, DEPTH1, DEPTH2, not HUMAN_PLAY_AS_O
                 )
 
+        # Waiting for computer to finish thinking
+        elif game_running:
+            pygame.time.delay(25)
     # for event in pygame.event.get():
     #
     #     if event.type == MOUSEBUTTONDOWN:
