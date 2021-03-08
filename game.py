@@ -77,12 +77,28 @@ def draw_game(screen, game):
                 elif spot == -1:
                     draw_move(screen, board_index, spot_index, "O", font)
 
-    if game.board_to_move != +-1:
-
+    if game.board_to_move != -1:
         if game.to_move == -1:
             box_board(screen, game.board_to_move, (100, 100, 200))
         else:
             box_board(screen, game.board_to_move, (200, 100, 100))
+
+    else:
+        if game.to_move == -1:
+            to_move_color = (100, 100, 200)
+        else:
+            to_move_color = (200, 100, 100)
+        pygame.draw.rect(
+            screen,
+            to_move_color,
+            pygame.Rect(
+                BOARD_BUFFER_X,
+                BOARD_BUFFER_Y,
+                SCREEN_WIDTH - 2 * BOARD_BUFFER_X,
+                SCREEN_HEIGHT - 2 * BOARD_BUFFER_Y,
+            ),
+            width=5,
+        )
 
     pygame.display.flip()
 
