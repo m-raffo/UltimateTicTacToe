@@ -4,7 +4,9 @@ from math import sqrt
 from random import choice
 from multiprocessing import Pool
 from numpy import log
-
+import numpy as np
+cimport numpy as np
+from cython.view cimport array as cvarray
 
 # NOTE:
 # All X's have been replaced with 1
@@ -13,31 +15,67 @@ from numpy import log
 # This is to allow for greater optimization in cython and numpy arrays
 
 
-def flip_board(board):
+cdef int[:] all_x = np.full(3, -1)
+cdef int[:] all_o = np.full(3, -1)
+cdef int[:] all_empty = np.full(3, 0)
+cdef int[:] index_order = np.array([0, 4, 8, 2, 4, 6])
+cdef int[:, :] empty_board = np.full((9, 9), 0)
+cdef int[:] empty_miniboard = np.full(9, 0)
+
+
+cpdef int [:,:] flip_board(int [:, :] board):
     """
     Flips the X and O pieces on a large scale board.
     :param board: The board
     :return: list, the converted board
     """
 
-    flipped_board = []
+    cdef int flipped_board_array[9][9]
+    cdef int[:, :] flipped_board = flipped_board_array
 
-    for i in board:
-        flipped_board.append([])
+
+    cdef int spot
+
+    for i in range(board.shape[0]):
+
         # Flip X and O in every list
         # I is just an intermediary character, no other significance
-        for spot in i:
-            if spot == -1:
-                flipped_board[-1].append(1)
-            elif spot == 1:
-                flipped_board[-1].append(-1)
-            else:
-                flipped_board[-1].append(0)
+
+        for j in range(board.shape[1]):
+            flipped_board[i, j] = board[i, j] * -1
 
     return flipped_board
 
 
-def mini_board_eval(miniboard: list, constants=None) -> float:
+cdef int count_instances(int [:] row_to_count, int value):
+    """
+    A version of list.count() for memoryviewslices
+    """
+    cdef int result = 0
+    for i in range(row_to_count.shape[0]):
+        if row_to_count[i] == value:
+          result += 1
+
+    return result
+
+cdef int find_index(int [:] row_to_search, int value):
+    for i in range(row_to_search.shape[0]):
+        if row_to_search[i] == value:
+          return i
+
+    return -1
+
+cdef int check_equality(int[:] array1, int[:] array2):
+    if array1.shape[0] != array2.shape[0]:
+        return 0
+
+    for i in range(array1.shape[0]):
+        if array1[i] != array2[i]:
+          return 0
+
+    return 1
+
+cpdef float mini_board_eval(int [:] miniboard, constants=None):
     """
     Calculates the evaluation of a mini board.
 
@@ -59,6 +97,8 @@ def mini_board_eval(miniboard: list, constants=None) -> float:
     :return: The evaluation for X
     """
 
+    cdef int c1, c2, cw, cl
+
     if constants is None:
         # Mini board eval constants
         c1 = 2
@@ -77,154 +117,186 @@ def mini_board_eval(miniboard: list, constants=None) -> float:
         cl = constants["cl"]
 
     # This will be incremented as matching positions are found
-    r = 0
+    cdef int r = 0
 
     winning_index = set()
 
+
+
+    cdef int[:] row
+
     # Check each row
+    cdef int i
     for i in range(3):
         row = miniboard[i * 3 : i * 3 + 3]
 
         # Check for win
-        if row == [1, 1, 1]:
+        if check_equality(all_x, row):
             return cw
 
         # Check for loss
-        if row == [-1, -1, -1]:
+        if check_equality(all_o, row):
             return cl
+
         # If row is empty except for x, this is a row winnable in two moves
         if -1 not in row:
-            count = row.count(1)
+            count = count_instances(row, 1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Calculate the location of the empty square in the whole board
-                winning_index.add(i * 3 + row.index(0))
+                winning_index.add(i * 3 + find_index(row, 0))
 
     # Check each column
     for i in range(3):
-        row = [miniboard[i], miniboard[i + 3], miniboard[i + 6]]
+        row = miniboard[i:i+7:3]
 
         # Check for win
-        if row == [1, 1, 1]:
+        if check_equality(all_x, row):
             return cw
 
         # Check for loss
-        if row == [-1, -1, -1]:
+        if check_equality(all_o, row):
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
         if -1 not in row:
-            count = row.count(1)
+            count = count_instances(row, 1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Calculate the location of the empty square in the whole board
-                winning_index.add(i + row.index(0) * 3)
+                winning_index.add(i + find_index(row, 0) * 3)
 
     # Check both diagonals
 
     # Keep track of which space is which on the miniboard
-    diagonal_count = -1
-    index_order = [0, 4, 8, 2, 4, 6]
-    for row in [
+    cdef int diagonal_count = -1
+
+    cdef int[:, :] diagonals = np.array([
         [miniboard[0], miniboard[4], miniboard[8]],
         [miniboard[2], miniboard[4], miniboard[6]],
-    ]:
+    ])
+
+    for row_index in range(2):
+        row = diagonals[row_index]
         diagonal_count += 1
 
         # Check for win
-        if row == [1, 1, 1]:
+        if check_equality(all_x, row):
             return cw
 
         # Check for loss
-        if row == [-1, -1, -1]:
+        if check_equality(all_o, row):
             return cl
 
         # If row is empty except for x, this is a row winnable in two moves
         if -1 not in row:
-            count = row.count(1)
+            count = count_instances(row, 1)
             if count == 1:
                 r += 1
 
             # If the row is empty except for one, this is a winning index
             elif count == 2:
                 # Add the correct index
-                empty_space_index = index_order[row.index(0) + 3 * diagonal_count]
+                empty_space_index = index_order[find_index(row, 0) + 3 * diagonal_count]
                 winning_index.add(empty_space_index)
 
-    w = len(winning_index)
+    cdef int w = len(winning_index)
 
     return c1 * (w ** 0.5) + c2 * r
 
+cdef int _check_rows_and_columns_and_diagonals(int [:] b):
+    # Check each row
+    cdef int i
+    cdef int [:] row
+    cdef int row_index
 
-def check_win(board):
+
+    for i in range(3):
+        row = b[i * 3 : i * 3 + 3]
+
+        # Check for win
+        if check_equality(row, all_x):
+            return 1
+
+        # Check for loss
+        if check_equality(row, all_o):
+            return -1
+
+    # Check each column
+    for i in range(3):
+        row = b[i:i+7:3]
+
+        # Check for win
+        if check_equality(row, all_x):
+            return 1
+
+        # Check for loss
+        if check_equality(row, all_o):
+            return -1
+
+    cdef int[:, :] diagonals = np.array([
+        [b[0], b[4], b[8]],
+        [b[2], b[4], b[6]],
+    ])
+
+    # Check both diagonals
+    for row_index in range(2):
+        row = diagonals[row_index]
+
+        # Check for win
+        if check_equality(row, all_x):
+            return 1
+
+        # Check for loss
+        if check_equality(row, all_o):
+            return -1
+
+    return 0
+
+cpdef int check_win(int[:] board):
     """
     Checks if the given board is a win (ie three in a row)
     :param board: A list of the board
-    :return: 1 if x is winning, -1 if o is winning, None if neither is winning and the game goes on, 0 if a tie
+    :return: 1 if x is winning, -1 if o is winning, 2 if neither is winning and the game goes on, 0 if a tie
     """
 
+
     # If the board is empty, the game goes on
-    if board == [0, 0, 0, 0, 0, 0, 0, 0, 0]:
-        return None
+    if check_equality(board, empty_miniboard):
+        return 2
 
-    def check_rows_and_columns_and_diagonals(b):
-        # Check each row
-        for i in range(3):
-            row = b[i * 3 : i * 3 + 3]
+    cdef int result = _check_rows_and_columns_and_diagonals(board)
 
-            # Check for win
-            if row == [1, 1, 1]:
-                return 1
-
-            # Check for loss
-            if row == [-1, -1, -1]:
-                return -1
-
-        # Check each column
-        for i in range(3):
-            row = [b[i], b[i + 3], b[i + 6]]
-
-            # Check for win
-            if row == [1, 1, 1]:
-                return 1
-
-            # Check for loss
-            if row == [-1, -1, -1]:
-                return -1
-
-        # Check both diagonals
-        for row in [
-            [b[0], b[4], b[8]],
-            [b[2], b[4], b[6]],
-        ]:
-
-            # Check for win
-            if row == [1, 1, 1]:
-                return 1
-
-            # Check for loss
-            if row == [-1, -1, -1]:
-                return -1
-
-    result = check_rows_and_columns_and_diagonals(board)
-
-    if result is not None:
+    if result != 0:
         return result
 
     # If the board is filled, tie; if not, the game continues
     if 0 in board:
-        return None
+        return 2
 
-    return False
+    return 0
 
+# All win patterns (Note each list does not include the board itself)
+# [-1, -1] Included to make the array the same length in all elements
+cdef int[:, :, :] win_possibilities = np.array([
+    [[1, 2], [4, 8], [3, 6], [-1, -1]],
+    [[4, 7], [0, 2], [-1, -1], [-1, -1]],
+    [[4, 6], [0, 1], [5, 8], [-1, -1]],
+    [[0, 6], [4, 5], [-1, -1], [-1, -1]],
+    [[0, 8], [1, 7], [2, 6], [3, 5]],
+    [[3, 4], [2, 8], [-1, -1], [-1, -1]],
+    [[0, 3], [7, 8], [4, 2], [-1, -1]],
+    [[6, 8], [1, 4], [-1, -1], [-1, -1]],
+    [[0, 4], [6, 7], [2, 5], [-1, -1]],
+])
 
-def calc_significance(board):
+cpdef float[:] calc_significance(int [:, :] board):
     """
     Calculates the significance of each miniboard.
 
@@ -234,30 +306,26 @@ def calc_significance(board):
     """
 
     # Calculate each mini board evaluation
-    evals = []
-    for i in board:
-        evals.append(mini_board_eval(i))
+    cdef float[9] evals
+    cdef int i
+    cdef float miniboard1_eval, miniboard2_eval
 
-    # All win patterns (Note each list does not include the board itself)
-    win_possibilities = {
-        0: [[1, 2], [4, 8], [3, 6]],
-        1: [[4, 7], [0, 2]],
-        2: [[4, 6], [0, 1], [5, 8]],
-        3: [[0, 6], [4, 5]],
-        4: [[0, 8], [1, 7], [2, 6], [3, 5]],
-        5: [[3, 4], [2, 8]],
-        6: [[0, 3], [7, 8], [4, 2]],
-        7: [[6, 8], [1, 4]],
-        8: [[0, 4], [6, 7], [2, 5]],
-    }
+    for i in range(board.shape[0]):
+        evals[i] = mini_board_eval(board[i])
 
     # Calculate the significance of each board (default is 1)
-    significances = []
+    cdef float[9] significances
+    cdef int[:] win_coordinates
+
     for i in range(9):
-        significances.append(1)
+        significances[i] = 1
+
+
         # Check each win possibility
         for win_coordinates in win_possibilities[i]:
-
+            # If this is true, they have all been serached
+            if win_coordinates[0] == -1:
+                break
             # If either board is already won for the other side, a win is not possible
             # or if either board is already drawn
             game_results0 = check_win(board[win_coordinates[0]])
@@ -273,12 +341,12 @@ def calc_significance(board):
             miniboard1_eval = evals[win_coordinates[0]]
             miniboard2_eval = evals[win_coordinates[1]]
 
-            significances[-1] += miniboard1_eval + miniboard2_eval
+            significances[i] += miniboard1_eval + miniboard2_eval
 
     return significances
 
 
-def eval_board_one_side(board, constants=None):
+cdef float eval_board_one_side(int[:, :]board, constants=None):
     """
     Calculate an evaluation of a full board for one side
     :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information
@@ -286,22 +354,23 @@ def eval_board_one_side(board, constants=None):
     :return: float - A number that indicates that extent to which X is winning
     """
 
-    miniboard_evals = []
+    cdef float[9] miniboard_evals
 
-    for miniboard in board:
-        miniboard_evals.append(mini_board_eval(miniboard, constants))
+    for miniboard_index in range(board.shape[0]):
+        miniboard_evals[miniboard_index] = mini_board_eval(board[miniboard_index], constants)
 
-    significances = calc_significance(board)
+    cdef float[:] significances = calc_significance(board)
 
-    final_eval = 0
+    cdef float final_eval = 0
 
+    cdef int i
     for i in range(9):
         final_eval += miniboard_evals[i] * significances[i]
 
     return final_eval
 
 
-def eval_board(board, constants=None):
+cpdef float eval_board(int[:, :] board, constants=None):
     """
     Calculate a full evaluation for both sides of a large board.
     :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information.
@@ -309,19 +378,25 @@ def eval_board(board, constants=None):
     :return: float - positive indicates that X is winning; negative indicates O is winning
     """
 
-    x_eval = eval_board_one_side(board, constants)
-    flipped = flip_board(board)
-    o_eval = eval_board_one_side(flipped, constants)
+    cdef float x_eval = eval_board_one_side(board, constants)
+    cdef int [:,:] flipped = flip_board(board)
+    cdef float o_eval = eval_board_one_side(flipped, constants)
 
     return x_eval - o_eval
 
 
-def detail_eval(board):
+cpdef int[:] detail_eval(int [:, :] board):
+    cdef float x_eval, o_eval
+    cdef int[:, :] flipped
+    cdef int[:] result
+
     x_eval = eval_board_one_side(board)
     flipped = flip_board(board)
     o_eval = eval_board_one_side(flipped)
 
-    return x_eval, o_eval
+    result = np.array([x_eval, o_eval])
+
+    return result
 
 
 def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
@@ -334,7 +409,7 @@ def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
     :param depth: The number of moves to search into the future
     :return:
     """
-    if depth == 0 or board.board.game_result is not None:
+    if depth == 0 or board.board.game_result() != 2:
         return board.eval_constants(constants)
 
     # Initialize with worst possible outcome, so anything else is always better
@@ -566,7 +641,7 @@ class Node:
                 print(temp_board)
 
         # Return the appropriate value based on the result
-        result = temp_board.game_result
+        result = temp_board.game_result()
 
         # If win
         if (result == 1 and play_x) or (result == -1 and not play_x):
@@ -577,7 +652,7 @@ class Node:
             return -1
 
         # If tie
-        elif not result:
+        elif result == 0:
             return 0
 
         else:
@@ -590,10 +665,10 @@ class Node:
         :return: boolean, True if terminal, False if not
         """
         # TODO: Optimization, once this result has been calculated once, store it and do not recalculate
-        result = self.board.game_result
+        result = self.board.game_result()
 
         # If the result is not none, the node is terminal
-        if result is not None:
+        if result != 2:
             return True
 
         return False
@@ -662,13 +737,13 @@ class Node:
             return self._eval
 
         # If the game is over, return appropriate value
-        result = self.board.game_result
+        result = self.board.game_result()
         if result == 1:
             result = float("inf")
         elif result == -1:
             result = float("-inf")
         # If tie return 0
-        elif result == False:
+        elif result == 0:
             result = 0
 
         else:
@@ -681,13 +756,13 @@ class Node:
     def eval_constants(self, constants):
 
         # If the game is over, return appropriate value
-        result = self.board.game_result
+        result = self.board.game_result()
         if result == 1:
             result = float("inf")
         elif result == -1:
             result = float("-inf")
         # If tie return 0
-        elif result == False:
+        elif result == 0:
             result = 0
 
         else:

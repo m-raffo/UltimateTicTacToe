@@ -1,5 +1,5 @@
 from unittest import TestCase
-from main import GameState
+from gamestate import GameState
 
 
 class TestGameState(TestCase):

@@ -1,6 +1,6 @@
 import pygame
 
-import main
+import gamestate
 import mcts
 
 from pygame.locals import (
@@ -33,12 +33,12 @@ def draw_game(screen, game):
     for miniboard in game.board:
         board_index += 1
 
-        miniboard_status = game.check_win(miniboard)
+        miniboard_status = mcts.check_win(miniboard)
 
         board_x = board_index % 3
         board_y = int(board_index / 3)
 
-        if miniboard_status is not None:
+        if miniboard_status != 2:
 
             board_start_x = (
                 SCREEN_WIDTH - 2 * BOARD_BUFFER_X
@@ -76,7 +76,7 @@ def draw_game(screen, game):
                 elif spot == -1:
                     draw_move(screen, board_index, spot_index, "O", font)
 
-    if game.board_to_move is not None:
+    if game.board_to_move == -1:
         if game.to_move == -1:
             box_board(screen, game.board_to_move, (100, 100, 200))
         else:
@@ -307,7 +307,7 @@ if __name__ == "__main__":
 
     is_players_move = False
 
-    game = main.GameState()
+    game = gamestate.GameState()
 
     if HUMAN_PLAY_AS_O:
         game.move(4, 4)
@@ -322,12 +322,14 @@ if __name__ == "__main__":
 
     while running:
 
-        if not is_players_move and game.game_result is None:
+        if not is_players_move and game.game_result() == 2:
             if minimax_results.ready():
                 p.close()
                 p.terminate()
 
                 is_players_move = True
+                print("THER")
+                print(list(minimax_results.get()))
                 moves_and_evals = zip(minimax_node.children, minimax_results.get())
 
                 if HUMAN_PLAY_AS_O:
@@ -350,13 +352,13 @@ if __name__ == "__main__":
 
                 print(game)
 
-                result = game.game_result
-                if result is not None:
+                result = game.game_result()
+                if result != 2:
                     if result == 1:
                         display_message(screen, "X WINS!")
                     elif result == -1:
                         display_message(screen, "O WINS!")
-                    elif result == False:
+                    elif result == 0:
                         display_message(screen, "TIE GAME!")
 
                     game_running = False
@@ -400,6 +402,7 @@ if __name__ == "__main__":
                         minimax_node = i
                         found_board = True
 
+                found_board = True
                 if not found_board:
                     print(
                         "Your move was not found as a valid move. Are you sure you entered it correctly?"
@@ -418,8 +421,8 @@ if __name__ == "__main__":
 
                 draw_game(screen, game)
 
-                result = game.game_result
-                if result is not None:
+                result = game.game_result()
+                if result != 2:
                     if result == 1:
                         display_message(screen, "X WINS!")
                     elif result == -1:

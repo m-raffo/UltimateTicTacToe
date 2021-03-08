@@ -1,13 +1,19 @@
 import mcts
 import cProfile
 import pickle
+import numpy as np
+cimport numpy as np
 
+cdef class GameState:
+    cdef int to_move, board_to_move
 
-class GameState:
+    cdef int [:,:] board
+    cdef int [:] previous_move
+
     def __init__(self):
 
         # List of the board
-        self.board = []
+        self.board = np.full((9, 9), 0)
 
         # Which piece's turn is it?
         # 1 = X
@@ -15,12 +21,9 @@ class GameState:
         self.to_move = 1
 
         # Which board must they move on, none if there is no requirement
-        self.board_to_move = None
-        for i in range(9):
-            # Add an empty board
-            self.board.append([0] * 9)
+        self.board_to_move = -1
 
-        self.previous_move = None
+        self.previous_move = np.array([-1, -1])
 
     def copy_board(self):
         """
@@ -28,69 +31,49 @@ class GameState:
         :return: GameState
         """
 
-        return pickle.loads(pickle.dumps(self, -1))
+        cdef GameState new_board = GameState()
 
-    @staticmethod
-    def check_win(board):
-        """
-        Checks if the given board is a win (ie three in a row)
-        :param board: A list of the board
-        :return: 'X' if x is winning, 'O' if o is winning, None if neither is winning and the game goes on, False if a tie
-        """
+        new_board.board[:] = self.board
+        new_board.to_move = self.to_move
+        new_board.board_to_move = self.board_to_move
+        new_board.previous_move[:] = self.previous_move
 
-        # If the board is empty, the game goes on
-        if board == [0, 0, 0, 0, 0, 0, 0, 0, 0]:
-            return None
+        return new_board
 
-        def check_rows_and_columns_and_diagonals(b):
-            # Check each row
-            for i in range(3):
-                row = b[i * 3 : i * 3 + 3]
 
-                # Check for win
-                if row == [1, 1, 1]:
-                    return 1
+    @property
+    def board_to_move(self):
+        return self.board_to_move
 
-                # Check for loss
-                if row == [-1, -1, -1]:
-                    return -1
+    @board_to_move.setter
+    def board_to_move(self, value):
+        self.board_to_move = value
 
-            # Check each column
-            for i in range(3):
-                row = [b[i], b[i + 3], b[i + 6]]
+    @property
+    def previous_move(self):
+        return self.previous_move
 
-                # Check for win
-                if row == [1, 1, 1]:
-                    return 1
+    @previous_move.setter
+    def previous_move(self, value):
+        self.previous_move = value
 
-                # Check for loss
-                if row == [-1, -1, -1]:
-                    return -1
+    @property
+    def board(self):
+        return self.board
 
-            # Check both diagonals
-            for row in [
-                [b[0], b[4], b[8]],
-                [b[2], b[4], b[6]],
-            ]:
+    @board.setter
+    def board(self, value):
+        self.board = value
 
-                # Check for win
-                if row == [1, 1, 1]:
-                    return 1
 
-                # Check for loss
-                if row == [-1, -1, -1]:
-                    return -1
+    @property
+    def to_move(self):
+        return self.previous_move
 
-        result = check_rows_and_columns_and_diagonals(board)
+    @to_move.setter
+    def to_move(self, value):
+        self.to_move = value
 
-        if result is not None:
-            return result
-
-        # If the board is filled, tie; if not, the game continues
-        if 0 in board:
-            return None
-
-        return False
 
     def check_valid_move(self, board, spot):
         """
@@ -108,31 +91,31 @@ class GameState:
 
         return False
 
-    @property
-    def game_result(self):
+    cpdef game_result(self):
         """
         Gets the status of the game.
 
         Possible statuses are:
-        'X' - the game is over and X wins
-        'O' - the game is over and O wins
-        None - the game is in progress
-        False - the game is a tie
+        1 - the game is over and X wins
+        -1 - the game is over and O wins
+        2 - the game is in progress
+        0 - the game is a tie
         :return: The result of the game; False if tie; and None if the game is in progress
         """
 
-        full_board_results = []
+        cdef int [:] full_board_results = np.full(9, 0)
+        cdef int index = -1
+
 
         for i in self.board:
-            miniboard_result = self.check_win(i)
+            index += 1
+            miniboard_result = mcts.check_win(i)
 
             # If the game is ongoing, the space is effectively empty
-            if miniboard_result is None:
-                full_board_results.append(0)
-            else:
-                full_board_results.append(miniboard_result)
+            if miniboard_result != 2:
+                full_board_results[index] = miniboard_result
 
-        return self.check_win(full_board_results)
+        return mcts.check_win(full_board_results)
 
     def move(self, board, spot):
         """
@@ -154,13 +137,13 @@ class GameState:
         # Update board
 
         # If the board in the position of the move is finished, there is no required next board
-        if self.check_win(self.board[spot]) is None:
+        if mcts.check_win(self.board[spot]) == 2:
             self.board_to_move = spot
         else:
-            self.board_to_move = None
+            self.board_to_move = -1
 
         # Update previous move
-        self.previous_move = [board, spot]
+        self.previous_move = np.array([board, spot])
 
     def all_possible_moves(self):
         """
@@ -171,7 +154,7 @@ class GameState:
         possibilities = []
 
         # If they can move anywhere
-        if self.board_to_move is None:
+        if self.board_to_move == -1:
             board_index = -1
 
             # Loop every board
@@ -181,7 +164,7 @@ class GameState:
                 spot_index = -1
 
                 # If the board is won, no moves can be played on it
-                if self.check_win(b) is not None:
+                if mcts.check_win(b) != 2:
                     continue
 
                 # Loop every spot
@@ -317,7 +300,7 @@ def computer_vs_computer(
     else:
         b = GameState()
 
-    while b.game_result is None:
+    while b.game_result() == 2:
 
         # Calculate the first move
         comp1_move = move_function1(b.copy_board(), depth1, constants=constants1)
@@ -331,7 +314,7 @@ def computer_vs_computer(
             print(b.board)
             print(b)
 
-        if b.game_result is not None:
+        if b.game_result() != 2:
 
             break
 
@@ -349,9 +332,9 @@ def computer_vs_computer(
 
     if print_moves:
         print("The game is over!")
-        print(f"RESULT {b.game_result}")
+        print(f"RESULT {b.game_result()}")
 
-    return b.game_result
+    return b.game_result()
 
 
 if __name__ == "__main__":
@@ -486,7 +469,7 @@ if __name__ == "__main__":
     # cProfile.run("mcts.mcts(current_game_node, 10000)")
     #
     # exit()
-    # print(b.check_win(b.board[5]))
+    # print(mcts.check_win(b.board[5]))
     # exit()
 
     # a = mcts.Node(b)
@@ -502,7 +485,7 @@ if __name__ == "__main__":
 
     # computer_vs_computer()
 
-    while b.game_result is None:
+    while b.game_result() == 2:
 
         # print(
         #     f"Thinking... {current_game_node.descendants} nodes are in the tree and {current_game_node.n} iterations saved"
@@ -510,7 +493,7 @@ if __name__ == "__main__":
 
         # Have the computer play a move
         # current_game_node = mcts.mcts(current_game_node, 1000, 20)
-        # if current_game_node.board.board_to_move is None:
+        # if current_game_node.board.board_to_move == -1:
         #     current_game_node = mcts.minimax_search(current_game_node, 3)
         # else:
         #     current_game_node = mcts.minimax(current_game_node, 4)
@@ -528,7 +511,7 @@ if __name__ == "__main__":
         print(b.board)
         print(b)
 
-        if b.game_result is not None:
+        if b.game_result() != 2:
             print("You have lost!")
             break
 
@@ -540,7 +523,7 @@ if __name__ == "__main__":
 
         asking_for_move = True
         while asking_for_move:
-            if b.board_to_move is not None:
+            if b.board_to_move != -1:
                 print(f"Board >> {b.board_to_move}")
                 user_board = b.board_to_move
             else:
@@ -573,5 +556,5 @@ if __name__ == "__main__":
         print(b.board)
         print(b)
 
-    if b.game_result == -1:
+    if b.game_result() == -1:
         print("You have won!!")
