@@ -441,7 +441,6 @@ def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
             beta = min(beta, new_eval)
             if beta <= alpha:
                 break
-
     return best_eval
 
 
@@ -485,6 +484,8 @@ def minimax_search_seq(board, depth, play_as_o=False, constants=None):
             [i, minimax(i, depth - 1, float("-inf"), float("inf"), play_as_o)]
         )
 
+    print(list(moves_and_evals))
+
     if not play_as_o:
 
         return max(moves_and_evals, key=lambda x: x[1])
@@ -517,8 +518,9 @@ def minimax_search(board, depth, play_as_o=False, constants=None):
     with Pool() as p:
         evals = p.map(minimax_partial, board.children)
 
-    moves_and_evals = zip(board.children, evals)
+    moves_and_evals = list(zip(board.children, evals))
 
+    print(moves_and_evals)
     if not play_as_o:
 
         return max(moves_and_evals, key=lambda x: x[1])

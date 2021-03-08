@@ -3,6 +3,7 @@ import cProfile
 import pickle
 import numpy as np
 cimport numpy as np
+import cython
 
 cdef class GameState:
     cdef int to_move, board_to_move
@@ -24,6 +25,19 @@ cdef class GameState:
         self.board_to_move = -1
 
         self.previous_move = np.array([-1, -1])
+
+    def __getstate__(self):
+        return [np.asarray(self.board), self.to_move, self.board_to_move, np.asarray(self.previous_move)]
+
+    def __setstate__(self, x):
+        # try:
+        #     self.board.base, self.to_move, self.board_to_move, self.previous_move.base = x
+        # except AttributeError:
+        #     _, self.to_move, self.board_to_move, _ = x
+        #     self.board = np.full((9, 9), 0)
+        #     self.previous_move = np.array([-1, -1])
+        self.board, self.to_move, self.board_to_move, self.previous_move = x
+
 
     def copy_board(self):
         """
@@ -68,7 +82,7 @@ cdef class GameState:
 
     @property
     def to_move(self):
-        return self.previous_move
+        return self.to_move
 
     @to_move.setter
     def to_move(self, value):
