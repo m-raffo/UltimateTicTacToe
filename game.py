@@ -24,7 +24,7 @@ BOARD_BUFFER_Y = 25
 
 
 HUMAN_PLAY_AS_O = True
-DEPTH = 5
+DEPTH = 4
 
 
 def draw_game(screen, game):
@@ -305,8 +305,6 @@ if __name__ == "__main__":
     big_font = pygame.font.SysFont(None, 425)
     med_font = pygame.font.SysFont(None, 200)
 
-    small_font = pygame.font.SysFont(None, 30)
-
     is_players_move = False
 
     game = gamestate.GameState()
@@ -324,44 +322,44 @@ if __name__ == "__main__":
 
     while running:
 
-        # if not is_players_move and game.game_result() == 2:
-        #     if minimax_results.ready():
-        #         p.close()
-        #         p.terminate()
-        #
-        #         is_players_move = True
-        #         moves_and_evals = zip(minimax_node.children, minimax_results.get())
+        if not is_players_move and game.game_result() == 2:
+            if minimax_results.ready():
+                p.close()
+                p.terminate()
 
-        # if HUMAN_PLAY_AS_O:
-        #
-        #     minimax_node, current_eval = max(
-        #         moves_and_evals, key=lambda x: x[1]
-        #     )
-        # else:
-        #     minimax_node, current_eval = min(
-        #         moves_and_evals, key=lambda x: x[1]
-        #     )
-        #
-        # move = minimax_node.board.previous_move
-        # game.move(*move)
-        # # draw_move(screen, move[0], move[1], "X", font)
-        #
-        # screen.fill((255, 255, 255))
-        #
-        # draw_game(screen, game)
-        #
-        # print(game)
-        #
-        # result = game.game_result()
-        # if result != 2:
-        #     if result == 1:
-        #         display_message(screen, "X WINS!")
-        #     elif result == -1:
-        #         display_message(screen, "O WINS!")
-        #     elif result == 0:
-        #         display_message(screen, "TIE GAME!")
-        #
-        #     game_running = False
+                is_players_move = True
+                moves_and_evals = zip(minimax_node.children, minimax_results.get())
+
+                if HUMAN_PLAY_AS_O:
+
+                    minimax_node, current_eval = max(
+                        moves_and_evals, key=lambda x: x[1]
+                    )
+                else:
+                    minimax_node, current_eval = min(
+                        moves_and_evals, key=lambda x: x[1]
+                    )
+
+                move = minimax_node.board.previous_move
+                game.move(*move)
+                # draw_move(screen, move[0], move[1], "X", font)
+
+                screen.fill((255, 255, 255))
+
+                draw_game(screen, game)
+
+                print(game)
+
+                result = game.game_result()
+                if result != 2:
+                    if result == 1:
+                        display_message(screen, "X WINS!")
+                    elif result == -1:
+                        display_message(screen, "O WINS!")
+                    elif result == 0:
+                        display_message(screen, "TIE GAME!")
+
+                    game_running = False
 
         for event in pygame.event.get():
 
@@ -398,7 +396,7 @@ if __name__ == "__main__":
                 for i in minimax_node.children:
 
                     # If the board matches, use this as the new board
-                    if np.array_equal(i.board.board.base, test_board.board.base):
+                    if np.array_equal(i.board.board, test_board.board):
                         minimax_node = i
                         found_board = True
 
@@ -421,34 +419,7 @@ if __name__ == "__main__":
                 draw_game(screen, game)
 
                 result = game.game_result()
-                if result != 2:
-                    if result == 1:
-                        display_message(screen, "X WINS!")
-                    elif result == -1:
-                        display_message(screen, "O WINS!")
-                    elif result == False:
-                        display_message(screen, "TIE GAME!")
 
-                    game_running = False
-                    continue
-
-                minimax_node = mcts.minimax_search(
-                    minimax_node, DEPTH, not HUMAN_PLAY_AS_O
-                )[0]
-
-                print(minimax_node)
-
-                move = list(minimax_node.board.previous_move)
-                game.move(*move)
-                # draw_move(screen, move[0], move[1], "X", font)
-
-                screen.fill((255, 255, 255))
-
-                draw_game(screen, game)
-
-                print(game)
-
-                result = game.game_result()
                 if result != 2:
                     if result == 1:
                         display_message(screen, "X WINS!")
@@ -458,8 +429,11 @@ if __name__ == "__main__":
                         display_message(screen, "TIE GAME!")
 
                     game_running = False
+                    continue
 
-                is_players_move = True
+                minimax_results, p = mcts.minimax_search_async(
+                    minimax_node, DEPTH, not HUMAN_PLAY_AS_O
+                )
 
     # for event in pygame.event.get():
     #
