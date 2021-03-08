@@ -217,7 +217,6 @@ cdef class GameState:
             for board_index in range(9):
                 b = self.board[board_index]
 
-                board_index += 1
                 spot_index = -1
 
                 # If the board is won, no moves can be played on it
