@@ -6,12 +6,14 @@ from Cython.Build import cythonize
 import numpy
 
 
-ext_modules = [
-    Extension("gamestate", ["gamestate.pyx"], include_dirs=[numpy.get_include()]),
+extensions = [
+    Extension("gamestate", ["gamestate.pyx"], include_dirs=[numpy.get_include()],),
     Extension("mcts", ["mcts.pyx"], include_dirs=[numpy.get_include()]),
 ]
 
-setup(ext_modules=ext_modules, cmdclass={"build_ext": build_ext})
+setup(
+    ext_modules=cythonize(extensions, annotate=True), cmdclass={"build_ext": build_ext}
+)
 # print(numpy.get_include())
 # setup(
 #     ext_modules=cythonize("mcts.pyx", "gamestate.pyx"),

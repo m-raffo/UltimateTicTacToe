@@ -503,6 +503,93 @@ def minimax_search_pruning(board, depth1, depth2, play_as_o=False, constants=Non
     else:
         return min(moves_and_evals, key=lambda x: x[1])
 
+
+def minimax_prune_variable_depth(board, depths, play_as_o):
+    for i in depths[:-1]:
+        minimax(board, i - 1, float("-inf"), float("inf"), play_as_o)
+
+
+    # Step 2: Second round of evaluations
+    return minimax(board, depths[-1] - 1, float("-inf"), float("inf"), play_as_o)
+
+
+def minimax_prune_variable_depth_time_limited(board, depths, time_limit, play_as_o):
+    end_time = time.time() + time_limit
+
+    for i in depths[:-1]:
+        result = minimax(board, i - 1, float("-inf"), float("inf"), play_as_o)
+
+        # Stop searching after the time has passed and give result
+        if time.time() > end_time:
+            return result
+
+    # If time has not yet run out, do the final depth evaluation
+    return minimax(board, depths[-1] - 1, float("-inf"), float("inf"), play_as_o)
+
+def minimax_search_prune_time_limited_async(board, depths, time_limit, play_as_o=False):
+    if len(board.children) == 0:
+        board.add_children()
+
+    # Pruning might not be working optimally b/c the first set of child nodes are all kept separate
+
+    minimax_partial = partial(
+        minimax_prune_variable_depth_time_limited,
+        depths=depths,
+        time_limit=time_limit,
+        play_as_o=play_as_o,
+    )
+
+    p = Pool()
+    evals = p.map_async(minimax_partial, board.children)
+
+    return evals, p
+
+def minimax_search_seq_variable_pruning(board, depths, play_as_o=False, constants=None):
+
+
+    if len(board.children) == 0:
+        board.add_children()
+
+
+    for depth in depths[:-1]:
+        # Step 1: First round of evaluations and pruning
+        for i in board.children:
+            minimax(i, depth - 1, float("-inf"), float("inf"), play_as_o)
+
+
+    # Step 2: Second round of evaluations
+    moves_and_evals = []
+    for i in board.children:
+        moves_and_evals.append(
+            [i, minimax(i, depths[-1] - 1, float("-inf"), float("inf"), play_as_o)]
+        )
+
+    print(list(moves_and_evals))
+
+    if not play_as_o:
+
+        return max(moves_and_evals, key=lambda x: x[1])
+    else:
+        return min(moves_and_evals, key=lambda x: x[1])
+
+
+def minimax_search_variable_pruning_async(board, depths, play_as_o=False, constants=None):
+    if len(board.children) == 0:
+        board.add_children()
+
+    # Pruning might not be working optimally b/c the first set of child nodes are all kept separate
+
+    minimax_partial = partial(
+        minimax_prune_variable_depth,
+        depths=depths,
+        play_as_o=play_as_o,
+    )
+
+    p = Pool()
+    evals = p.map_async(minimax_partial, board.children)
+
+    return evals, p
+
 def minimax_search_pruning_async(board, depth1, depth2, play_as_o=False, constants=None):
     if len(board.children) == 0:
         board.add_children()

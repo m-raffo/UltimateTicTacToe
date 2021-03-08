@@ -24,8 +24,11 @@ BOARD_BUFFER_Y = 25
 
 
 HUMAN_PLAY_AS_O = True
-DEPTH1 = 4
-DEPTH2 = 6
+DEPTH1 = 2
+DEPTH2 = 4
+
+DEPTHS = [3, 4, 6, 8, 10]
+TIME_LIMIT = 4
 
 
 def draw_game(screen, game):
@@ -447,13 +450,10 @@ if __name__ == "__main__":
                     game_running = False
                     continue
 
-                minimax_results, p = mcts.minimax_search_pruning_async(
-                    minimax_node, DEPTH1, DEPTH2, not HUMAN_PLAY_AS_O
+                minimax_results, p = mcts.minimax_search_prune_time_limited_async(
+                    minimax_node, DEPTHS, TIME_LIMIT, not HUMAN_PLAY_AS_O
                 )
 
-        # Waiting for computer to finish thinking
-        elif game_running:
-            pygame.time.delay(25)
     # for event in pygame.event.get():
     #
     #     if event.type == MOUSEBUTTONDOWN:

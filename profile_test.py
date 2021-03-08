@@ -64,12 +64,14 @@ if __name__ == "__main__":
     #     exit()
 
     py_command = "print(mctsold.minimax_search_seq(current_game_node, 2, False))"
-    cy_command = (
-        "print(mcts.minimax_search_seq_pruning(current_game_node, 4, 6, False))"
+    cy_command = "print(mcts.minimax_search_seq_variable_pruning(current_game_node, [3, 4, 6], False))"
+
+    cy_command2 = (
+        "print(mcts.minimax_search_seq_pruning(current_game_node, 3, 6, False))"
     )
 
     # cProfile.run(cy_command)
-    cProfile.run(cy_command)
+    cProfile.run(cy_command2)
     # cy = timeit.timeit(cy_command)
     # py = timeit.timeit(py_command)
     #
