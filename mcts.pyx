@@ -15,7 +15,7 @@ from cython.view cimport array as cvarray
 # This is to allow for greater optimization in cython and numpy arrays
 
 
-cdef int[:] all_x = np.full(3, -1)
+cdef int[:] all_x = np.full(3, 1)
 cdef int[:] all_o = np.full(3, -1)
 cdef int[:] all_empty = np.full(3, 0)
 cdef int[:] index_order = np.array([0, 4, 8, 2, 4, 6])
