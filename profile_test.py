@@ -3,7 +3,6 @@ from gamestate import GameState
 import mcts
 import timeit
 
-import mctsold
 import numpy as np
 
 # TEST BOARD

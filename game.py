@@ -351,11 +351,11 @@ if __name__ == "__main__":
                 if HUMAN_PLAY_AS_O:
 
                     minimax_node, current_eval = max(
-                        moves_and_evals, key=lambda x: x[1]
+                        moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
                     )
                 else:
                     minimax_node, current_eval = min(
-                        moves_and_evals, key=lambda x: x[1]
+                        moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
                     )
 
                 move = minimax_node.board.previous_move

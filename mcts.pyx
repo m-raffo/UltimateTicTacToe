@@ -412,6 +412,11 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
     :return:
     """
     if depth == 0 or board.board.game_result() != 2:
+        final_evaluation = board.eval_constants(constants)
+
+        # Save the depth if the evaluation in infinite
+        if final_evaluation == float("inf") or final_evaluation == float("-inf"):
+            board.inf_depth = board.depth
         return board.eval_constants(constants)
 
     # Initialize with worst possible outcome, so anything else is always better
@@ -439,12 +444,31 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
         # Get next best eval and use alpha beta pruning
         if maximizing_player:
             best_eval = max(best_eval, new_eval)
+
+            # If the position is lost, the best option is the one furthest from a win
+            if best_eval == float("-inf"):
+                if board.inf_depth is None:
+                    board.inf_depth = child.inf_depth
+                elif board.inf_depth < child.inf_depth:
+                    board.inf_depth = child.inf_depth
+
             alpha = max(alpha, new_eval)
             if beta <= alpha:
                 board.pruned = True
                 break
         else:
+            if new_eval == float("-inf"):
+                board.inf_depth = child.inf_depth
+
             best_eval = min(best_eval, new_eval)
+
+            # If the position is lost, the best option is the one furthest from a win
+            if best_eval == float("inf"):
+                if board.inf_depth is None:
+                    board.inf_depth = child.inf_depth
+                elif board.inf_depth < child.inf_depth:
+                    board.inf_depth = child.inf_depth
+
             beta = min(beta, new_eval)
             if beta <= alpha:
                 board.pruned = True
@@ -501,9 +525,9 @@ def minimax_search_pruning(board, depth1, depth2, play_as_o=False, constants=Non
     print(moves_and_evals)
     if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: x[1])
+        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
     else:
-        return min(moves_and_evals, key=lambda x: x[1])
+        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
 
 
 def minimax_prune_variable_depth(board, depths, play_as_o):
@@ -570,9 +594,9 @@ def minimax_search_seq_variable_pruning(board, depths, play_as_o=False, constant
 
     if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: x[1])
+        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
     else:
-        return min(moves_and_evals, key=lambda x: x[1])
+        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
 
 
 def minimax_search_variable_pruning_async(board, depths, play_as_o=False, constants=None):
@@ -641,9 +665,9 @@ def minimax_search_seq_pruning(board, depth1, depth2, play_as_o=False, constants
 
     if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: x[1])
+        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
     else:
-        return min(moves_and_evals, key=lambda x: x[1])
+        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
 
 
 def minimax_search_seq(board, depth, play_as_o=False, constants=None):
@@ -669,9 +693,9 @@ def minimax_search_seq(board, depth, play_as_o=False, constants=None):
 
     if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: x[1])
+        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
     else:
-        return min(moves_and_evals, key=lambda x: x[1])
+        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
 
 
 def minimax_search(board, depth, play_as_o=False, constants=None):
@@ -704,9 +728,9 @@ def minimax_search(board, depth, play_as_o=False, constants=None):
     print(moves_and_evals)
     if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: x[1])
+        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
     else:
-        return min(moves_and_evals, key=lambda x: x[1])
+        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
 
 
 def minimax_search_move(board, depth, play_as_o=False, constants=None):
@@ -766,6 +790,9 @@ class Node:
 
         # Save if this node has been previously pruned
         self.pruned = False
+
+        # Used to delay forced losses and take forced wins
+        self.inf_depth = 0
 
         if depth > 0 and parent is None:
             raise RuntimeError("Node defined with depth>1 and parent of None")
