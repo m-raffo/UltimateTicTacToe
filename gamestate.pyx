@@ -5,6 +5,44 @@ import numpy as np
 cimport numpy as np
 import cython
 
+cdef absolute_index_to_board_and_piece(int index):
+    """
+    Gets an absolute piece index to a board and piece
+    :param index: The index to be found
+    :return: (board_index, piece_index)
+    """
+
+    # i = index
+    # gx = global x value (independent of board)
+    # gy = same
+    #
+    # lx = local x value (within board)
+    # ly = same
+    #
+    # bx = x value of the whole board
+    # by = same
+    #
+    # pi = piece index
+    # bi = board index
+
+    cdef int i, gx, gy, lx, ly, bx, by, pi, bi
+
+    i = index
+
+    gx = i % 9
+    gy = int(i / 9)
+
+    lx = gx % 3
+    ly = gy % 3
+
+    bx = int((i % 9) / 3)
+    by = int(i / 27)
+
+    pi = ly * 3 + lx
+    bi = by * 3 + bx
+
+    return bi, pi
+
 cdef class GameState:
     cdef int to_move, board_to_move
 
@@ -131,7 +169,7 @@ cdef class GameState:
 
         return mcts.check_win(full_board_results)
 
-    def move(self, board, spot):
+    cpdef move(self, int board, int spot):
         """
         Make the given move on the board.
         :param board: int between 0 and 8 to move on
@@ -159,11 +197,15 @@ cdef class GameState:
         # Update previous move
         self.previous_move = np.array([board, spot], dtype=np.int32)
 
-    def all_possible_moves(self):
+    cpdef all_possible_moves(self):
         """
         Returns a list of all possible boards that can be made from moves played on this board
         :return: List[GameState]
         """
+
+        cdef int board_index, spot_index
+
+        cdef int[:] b
 
         possibilities = []
 
@@ -172,7 +214,8 @@ cdef class GameState:
             board_index = -1
 
             # Loop every board
-            for b in self.board:
+            for board_index in range(9):
+                b = self.board[board_index]
 
                 board_index += 1
                 spot_index = -1
@@ -182,8 +225,8 @@ cdef class GameState:
                     continue
 
                 # Loop every spot
-                for spot in b:
-                    spot_index += 1
+                for spot_index in range(9):
+                    spot = b[spot_index]
 
                     # Add a move for every empty spot
                     if spot == 0:
@@ -230,45 +273,12 @@ cdef class GameState:
     #         "\n".join(result[:-1]).replace("-1", -1).replace("1", "X").replace("0", " ")
     #     )
 
-    @staticmethod
-    def absolute_index_to_board_and_piece(index):
-        """
-        Gets an absolute piece index to a board and piece
-        :param index: The index to be found
-        :return: (board_index, piece_index)
-        """
-
-        # i = index
-        # gx = global x value (independent of board)
-        # gy = same
-        #
-        # lx = local x value (within board)
-        # ly = same
-        #
-        # bx = x value of the whole board
-        # by = same
-        #
-        # pi = piece index
-        # bi = board index
-
-        i = index
-
-        gx = i % 9
-        gy = int(i / 9)
-
-        lx = gx % 3
-        ly = gy % 3
-
-        bx = int((i % 9) / 3)
-        by = int(i / 27)
-
-        pi = ly * 3 + lx
-        bi = by * 3 + bx
-
-        return bi, pi
 
     def __str__(self):
         result = f"{self.to_move} to move\nRequired board: {self.board_to_move}\n"
+
+        cdef int board_index, piece_index, row, board_row, col, absolute_piece_index
+
 
         for row in range(9):
 
@@ -276,7 +286,7 @@ cdef class GameState:
                 for col in range(3):
                     absolute_piece_index = (row * 9) + (board_row * 3) + col
 
-                    board_index, piece_index = self.absolute_index_to_board_and_piece(
+                    board_index, piece_index = absolute_index_to_board_and_piece(
                         absolute_piece_index
                     )
 
@@ -475,7 +485,6 @@ if __name__ == "__main__":
 
     current_game_node.add_children()
     #
-    # print(mcts.eval_board(b.board))
     #
     # print(mcts.minimax(b, 3))
 

@@ -296,7 +296,7 @@ cdef int[:, :, :] win_possibilities = np.array([
     [[0, 4], [6, 7], [2, 5], [-1, -1]],
 ], dtype=np.int32)
 
-cpdef float[:] calc_significance(int [:, :] board):
+cdef float[:] calc_significance(int [:, :] board):
     """
     Calculates the significance of each miniboard.
 
@@ -316,6 +316,8 @@ cpdef float[:] calc_significance(int [:, :] board):
     # Calculate the significance of each board (default is 1)
     cdef float[9] significances
     cdef int[:] win_coordinates
+
+    cdef int game_results0, game_results1
 
     for i in range(9):
         significances[i] = 1
@@ -370,7 +372,7 @@ cdef float eval_board_one_side(int[:, :]board, constants=None):
     return final_eval
 
 
-cpdef float eval_board(int[:, :] board, constants=None):
+cdef float eval_board(int[:, :] board, constants=None):
     """
     Calculate a full evaluation for both sides of a large board.
     :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information.
@@ -399,7 +401,7 @@ cpdef int[:] detail_eval(int [:, :] board):
     return result
 
 
-def minimax(board, depth: int, alpha, beta, maximizing_player, constants=None):
+cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, constants=None):
     """
     Calculates the best move based on minimax evaluation of the given depth.
     :param maximizing_player:

@@ -3,7 +3,7 @@ from gamestate import GameState
 import mcts
 import timeit
 
-# import mctsold
+import mctsold
 import numpy as np
 
 # TEST BOARD
@@ -30,8 +30,6 @@ print(b)
 current_game_node = mcts.Node(b)
 
 current_game_node.add_children()
-
-print(current_game_node)
 
 
 if __name__ == "__main__":
