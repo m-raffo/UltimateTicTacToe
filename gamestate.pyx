@@ -14,7 +14,7 @@ cdef class GameState:
     def __init__(self):
 
         # List of the board
-        self.board = np.full((9, 9), 0)
+        self.board = np.full((9, 9), 0, dtype=np.int32)
 
         # Which piece's turn is it?
         # 1 = X
@@ -24,7 +24,7 @@ cdef class GameState:
         # Which board must they move on, none if there is no requirement
         self.board_to_move = -1
 
-        self.previous_move = np.array([-1, -1])
+        self.previous_move = np.array([-1, -1], dtype=np.int32)
 
     def __getstate__(self):
         return [np.asarray(self.board), self.to_move, self.board_to_move, np.asarray(self.previous_move)]
@@ -34,8 +34,8 @@ cdef class GameState:
         #     self.board.base, self.to_move, self.board_to_move, self.previous_move.base = x
         # except AttributeError:
         #     _, self.to_move, self.board_to_move, _ = x
-        #     self.board = np.full((9, 9), 0)
-        #     self.previous_move = np.array([-1, -1])
+        #     self.board = np.full((9, 9), 0, dtype=np.int32)
+        #     self.previous_move = np.array([-1, -1], dtype=np.int32)
         self.board, self.to_move, self.board_to_move, self.previous_move = x
 
 
@@ -117,7 +117,7 @@ cdef class GameState:
         :return: The result of the game; False if tie; and None if the game is in progress
         """
 
-        cdef int [:] full_board_results = np.full(9, 0)
+        cdef int [:] full_board_results = np.full(9, 0, dtype=np.int32)
         cdef int index = -1
 
 
@@ -157,7 +157,7 @@ cdef class GameState:
             self.board_to_move = -1
 
         # Update previous move
-        self.previous_move = np.array([board, spot])
+        self.previous_move = np.array([board, spot], dtype=np.int32)
 
     def all_possible_moves(self):
         """

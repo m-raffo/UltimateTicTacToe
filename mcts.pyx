@@ -15,12 +15,12 @@ from cython.view cimport array as cvarray
 # This is to allow for greater optimization in cython and numpy arrays
 
 
-cdef int[:] all_x = np.full(3, 1)
-cdef int[:] all_o = np.full(3, -1)
-cdef int[:] all_empty = np.full(3, 0)
-cdef int[:] index_order = np.array([0, 4, 8, 2, 4, 6])
-cdef int[:, :] empty_board = np.full((9, 9), 0)
-cdef int[:] empty_miniboard = np.full(9, 0)
+cdef int[:] all_x = np.full(3, 1, dtype=np.int32)
+cdef int[:] all_o = np.full(3, -1, dtype=np.int32)
+cdef int[:] all_empty = np.full(3, 0, dtype=np.int32)
+cdef int[:] index_order = np.array([0, 4, 8, 2, 4, 6], dtype=np.int32)
+cdef int[:, :] empty_board = np.full((9, 9), 0, dtype=np.int32)
+cdef int[:] empty_miniboard = np.full(9, 0, dtype=np.int32)
 
 
 cpdef int [:,:] flip_board(int [:, :] board):
@@ -180,7 +180,7 @@ cpdef float mini_board_eval(int [:] miniboard, constants=None):
     cdef int[:, :] diagonals = np.array([
         [miniboard[0], miniboard[4], miniboard[8]],
         [miniboard[2], miniboard[4], miniboard[6]],
-    ])
+    ], dtype=np.int32)
 
     for row_index in range(2):
         row = diagonals[row_index]
@@ -243,7 +243,7 @@ cdef int _check_rows_and_columns_and_diagonals(int [:] b):
     cdef int[:, :] diagonals = np.array([
         [b[0], b[4], b[8]],
         [b[2], b[4], b[6]],
-    ])
+    ], dtype=np.int32)
 
     # Check both diagonals
     for row_index in range(2):
@@ -294,7 +294,7 @@ cdef int[:, :, :] win_possibilities = np.array([
     [[0, 3], [7, 8], [4, 2], [-1, -1]],
     [[6, 8], [1, 4], [-1, -1], [-1, -1]],
     [[0, 4], [6, 7], [2, 5], [-1, -1]],
-])
+], dtype=np.int32)
 
 cpdef float[:] calc_significance(int [:, :] board):
     """
@@ -394,7 +394,7 @@ cpdef int[:] detail_eval(int [:, :] board):
     flipped = flip_board(board)
     o_eval = eval_board_one_side(flipped)
 
-    result = np.array([x_eval, o_eval])
+    result = np.array([x_eval, o_eval], dtype=np.int32)
 
     return result
 
