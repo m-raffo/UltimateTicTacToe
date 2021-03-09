@@ -417,7 +417,7 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
         # Save the depth if the evaluation in infinite
         if final_evaluation == float("inf") or final_evaluation == float("-inf"):
             board.inf_depth = board.depth
-        return board.eval_constants(constants)
+        return final_evaluation
 
     # Initialize with worst possible outcome, so anything else is always better
     if maximizing_player:
@@ -446,10 +446,13 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
             best_eval = max(best_eval, new_eval)
 
             # If the position is lost, the best option is the one furthest from a win
-            if best_eval == float("-inf"):
-                if board.inf_depth is None:
+            if new_eval == float("-inf"):
+                if board.inf_depth is None or board.inf_depth < child.inf_depth:
                     board.inf_depth = child.inf_depth
-                elif board.inf_depth < child.inf_depth:
+
+            # If the position is won, the best option is the one closest to a win
+            elif new_eval == float("inf"):
+                if board.inf_depth is None or board.inf_depth > child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             alpha = max(alpha, new_eval)
@@ -463,10 +466,13 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
             best_eval = min(best_eval, new_eval)
 
             # If the position is lost, the best option is the one furthest from a win
-            if best_eval == float("inf"):
-                if board.inf_depth is None:
+            if new_eval == float("inf"):
+                if board.inf_depth is None or board.inf_depth < child.inf_depth:
                     board.inf_depth = child.inf_depth
-                elif board.inf_depth < child.inf_depth:
+
+            # If the position is won, the best option is the one closest to a win
+            elif new_eval == float("-inf"):
+                if board.inf_depth is None or board.inf_depth > child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             beta = min(beta, new_eval)
