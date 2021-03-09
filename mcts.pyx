@@ -521,6 +521,7 @@ def minimax_search_pruning(board, depth1, depth2, play_as_o=False, constants=Non
         play_as_o=play_as_o,
     )
 
+    # TODO: Have board.children passed back to main thread after multiprocessing is complete
     with Pool() as p:
         evals = p.map(minimax_partial, board.children)
 

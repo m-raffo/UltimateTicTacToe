@@ -389,6 +389,9 @@ if __name__ == "__main__":
 
                 current_eval, minimax_node = result
 
+                minimax_node.children = []
+                minimax_node.add_children()
+
                 move = minimax_node.board.previous_move
                 game.move(*move)
                 # draw_move(screen, move[0], move[1], "X", font)
