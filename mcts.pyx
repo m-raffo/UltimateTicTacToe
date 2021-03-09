@@ -529,11 +529,32 @@ def minimax_search_pruning(board, depth1, depth2, play_as_o=False, constants=Non
     moves_and_evals = list(zip(board.children, evals))
 
     print(moves_and_evals)
-    if not play_as_o:
 
-        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+    if not play_as_o:
+        # Order the moves based on their evaluations
+        result = max(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("-inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
     else:
-        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+        # Order the moves based on their evaluations
+        result = min(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("-inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+    return result
 
 
 def minimax_prune_variable_depth(board, depths, play_as_o):
@@ -599,10 +620,30 @@ def minimax_search_seq_variable_pruning(board, depths, play_as_o=False, constant
     print(list(moves_and_evals))
 
     if not play_as_o:
+        # Order the moves based on their evaluations
+        result = max(moves_and_evals, key=lambda x: (x[1]))
 
-        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("-inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
     else:
-        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+        # Order the moves based on their evaluations
+        result = min(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("-inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+    return result
 
 
 def minimax_search_variable_pruning_async(board, depths, play_as_o=False, constants=None):
@@ -670,10 +711,30 @@ def minimax_search_seq_pruning(board, depth1, depth2, play_as_o=False, constants
     print(list(moves_and_evals))
 
     if not play_as_o:
+        # Order the moves based on their evaluations
+        result = max(moves_and_evals, key=lambda x: (x[1]))
 
-        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("-inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
     else:
-        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+        # Order the moves based on their evaluations
+        result = min(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("-inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+    return result
 
 
 def minimax_search_seq(board, depth, play_as_o=False, constants=None):
@@ -698,10 +759,30 @@ def minimax_search_seq(board, depth, play_as_o=False, constants=None):
     print(list(moves_and_evals))
 
     if not play_as_o:
+        # Order the moves based on their evaluations
+        result = max(moves_and_evals, key=lambda x: (x[1]))
 
-        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("-inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
     else:
-        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+        # Order the moves based on their evaluations
+        result = min(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("-inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+    return result
 
 
 def minimax_search(board, depth, play_as_o=False, constants=None):
@@ -733,10 +814,30 @@ def minimax_search(board, depth, play_as_o=False, constants=None):
 
     print(moves_and_evals)
     if not play_as_o:
+        # Order the moves based on their evaluations
+        result = max(moves_and_evals, key=lambda x: (x[1]))
 
-        return max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("-inf"):
+            result = max(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
     else:
-        return min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+        # Order the moves based on their evaluations
+        result = min(moves_and_evals, key=lambda x: (x[1]))
+
+        # If a forced win, take the shortest path to get there
+        if result[1] == float("-inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], x[0].inf_depth))
+
+        # If a forced loss, take the longest path to get there
+        elif result[1] == float("inf"):
+            result = min(moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth))
+
+    return result
 
 
 def minimax_search_move(board, depth, play_as_o=False, constants=None):
