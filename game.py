@@ -295,7 +295,9 @@ def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100
 
     # Draw the background
     pygame.draw.rect(
-        screen, bg_color, pygame.Rect(rectx, recty, width, height),
+        screen,
+        bg_color,
+        pygame.Rect(rectx, recty, width, height),
     )
 
     # Draw the text
@@ -349,14 +351,38 @@ if __name__ == "__main__":
                 moves_and_evals = zip(minimax_node.children, minimax_results.get())
 
                 if HUMAN_PLAY_AS_O:
+                    # Order the moves based on their evaluations
+                    result = max(moves_and_evals, key=lambda x: (x[1]))
 
-                    minimax_node, current_eval = max(
-                        moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
-                    )
+                    # If a forced win, take the shortest path to get there
+                    if result[1] == float("inf"):
+                        result = max(
+                            moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
+                        )
+
+                    # If a forced loss, take the longest path to get there
+                    elif result[1] == float("-inf"):
+                        result = max(
+                            moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
+                        )
+
                 else:
-                    minimax_node, current_eval = min(
-                        moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
-                    )
+                    # Order the moves based on their evaluations
+                    result = min(moves_and_evals, key=lambda x: (x[1]))
+
+                    # If a forced win, take the shortest path to get there
+                    if result[1] == float("-inf"):
+                        result = min(
+                            moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
+                        )
+
+                    # If a forced loss, take the longest path to get there
+                    elif result[1] == float("inf"):
+                        result = min(
+                            moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
+                        )
+
+                minimax_node, current_eval = result
 
                 move = minimax_node.board.previous_move
                 game.move(*move)
