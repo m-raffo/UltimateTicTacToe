@@ -336,59 +336,58 @@ if __name__ == "__main__":
     game_running = True
 
     minimax_node = mcts.Node(game)
-    minimax_results = None
+    minimax_results_evals_and_boards = None
 
     while running:
 
         clock.tick(30)
-        screen.fill((255, 255, 255))
 
-        draw_game(screen, game)
+        if game_running:
+            screen.fill((255, 255, 255))
+            draw_game(screen, game)
 
         if not is_players_move and game_running:
             pygame.event.pump()
-            if minimax_results.ready():
+            if minimax_results_evals_and_boards.ready():
                 p.close()
                 p.terminate()
 
                 is_players_move = True
-                moves_and_evals = list(
-                    zip(minimax_node.children, minimax_results.get())
-                )
+                evals_and_boards = minimax_results_evals_and_boards.get()
 
                 if HUMAN_PLAY_AS_O:
                     # Order the moves based on their evaluations
-                    result = max(moves_and_evals, key=lambda x: (x[1]))
+                    result = max(evals_and_boards, key=lambda x: (x[0]))
 
                     # If a forced win, take the shortest path to get there
-                    if result[1] == float("inf"):
+                    if result[0] == float("inf"):
                         result = max(
-                            moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
+                            evals_and_boards, key=lambda x: (x[0], -x[1].inf_depth)
                         )
 
                     # If a forced loss, take the longest path to get there
-                    elif result[1] == float("-inf"):
+                    elif result[0] == float("-inf"):
                         result = max(
-                            moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
+                            evals_and_boards, key=lambda x: (x[0], x[1].inf_depth)
                         )
 
                 else:
                     # Order the moves based on their evaluations
-                    result = min(moves_and_evals, key=lambda x: (x[1]))
+                    result = min(evals_and_boards, key=lambda x: (x[0]))
 
                     # If a forced win, take the shortest path to get there
                     if result[1] == float("-inf"):
                         result = min(
-                            moves_and_evals, key=lambda x: (x[1], x[0].inf_depth)
+                            evals_and_boards, key=lambda x: (x[0], x[1].inf_depth)
                         )
 
                     # If a forced loss, take the longest path to get there
                     elif result[1] == float("inf"):
                         result = min(
-                            moves_and_evals, key=lambda x: (x[1], -x[0].inf_depth)
+                            evals_and_boards, key=lambda x: (x[0], -x[1].inf_depth)
                         )
 
-                minimax_node, current_eval = result
+                current_eval, minimax_node = result
 
                 move = minimax_node.board.previous_move
                 game.move(*move)
@@ -398,6 +397,8 @@ if __name__ == "__main__":
 
                 result = game.game_result()
                 if result != 2:
+                    screen.fill((255, 255, 255))
+                    draw_game(screen, game)
                     if result == 1:
                         display_message(screen, "X WINS!")
                     elif result == -1:
@@ -463,6 +464,8 @@ if __name__ == "__main__":
                     result = game.game_result()
 
                     if result != 2:
+                        screen.fill((255, 255, 255))
+                        draw_game(screen, game)
                         if result == 1:
                             display_message(screen, "X WINS!")
                         elif result == -1:
@@ -473,7 +476,10 @@ if __name__ == "__main__":
                         game_running = False
                         continue
 
-                    minimax_results, p = mcts.minimax_search_prune_time_limited_async(
+                    (
+                        minimax_results_evals_and_boards,
+                        p,
+                    ) = mcts.minimax_search_prune_time_limited_async(
                         minimax_node, DEPTHS, TIME_LIMIT, not HUMAN_PLAY_AS_O
                     )
         else:

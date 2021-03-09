@@ -1,6 +1,6 @@
 import time
 from functools import partial
-from math import sqrt
+from math import sqrt, isnan
 from random import choice
 from multiprocessing import Pool
 from numpy import log
@@ -447,12 +447,12 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
 
             # If the position is lost, the best option is the one furthest from a win
             if new_eval == float("-inf"):
-                if board.inf_depth is None or board.inf_depth < child.inf_depth:
+                if isnan(board.inf_depth) or board.inf_depth < child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             # If the position is won, the best option is the one closest to a win
             elif new_eval == float("inf"):
-                if board.inf_depth is None or board.inf_depth > child.inf_depth:
+                if isnan(board.inf_depth) or board.inf_depth > child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             alpha = max(alpha, new_eval)
@@ -460,19 +460,17 @@ cpdef minimax(board, int depth, float alpha, float beta, maximizing_player, cons
                 board.pruned = True
                 break
         else:
-            if new_eval == float("-inf"):
-                board.inf_depth = child.inf_depth
 
             best_eval = min(best_eval, new_eval)
 
             # If the position is lost, the best option is the one furthest from a win
             if new_eval == float("inf"):
-                if board.inf_depth is None or board.inf_depth < child.inf_depth:
+                if isnan(board.inf_depth) or board.inf_depth < child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             # If the position is won, the best option is the one closest to a win
             elif new_eval == float("-inf"):
-                if board.inf_depth is None or board.inf_depth > child.inf_depth:
+                if isnan(board.inf_depth) or board.inf_depth > child.inf_depth:
                     board.inf_depth = child.inf_depth
 
             beta = min(beta, new_eval)
@@ -574,10 +572,10 @@ def minimax_prune_variable_depth_time_limited(board, depths, time_limit, play_as
 
         # Stop searching after the time has passed and give result
         if time.time() > end_time:
-            return result
+            return [result, board]
 
     # If time has not yet run out, do the final depth evaluation
-    return minimax(board, depths[-1] - 1, float("-inf"), float("inf"), play_as_o)
+    return [minimax(board, depths[-1] - 1, float("-inf"), float("inf"), play_as_o), board]
 
 def minimax_search_prune_time_limited_async(board, depths, time_limit, play_as_o=False):
     if len(board.children) == 0:
@@ -593,9 +591,9 @@ def minimax_search_prune_time_limited_async(board, depths, time_limit, play_as_o
     )
 
     p = Pool()
-    evals = p.map_async(minimax_partial, board.children)
+    evals_and_boards = p.map_async(minimax_partial, board.children)
 
-    return evals, p
+    return evals_and_boards, p
 
 def minimax_search_seq_variable_pruning(board, depths, play_as_o=False, constants=None):
 
@@ -899,7 +897,7 @@ class Node:
         self.pruned = False
 
         # Used to delay forced losses and take forced wins
-        self.inf_depth = 0
+        self.inf_depth = float("nan")
 
         if depth > 0 and parent is None:
             raise RuntimeError("Node defined with depth>1 and parent of None")
