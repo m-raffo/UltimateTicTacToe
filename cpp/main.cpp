@@ -1,6 +1,7 @@
 #include <iostream>
 #include <bitset>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -27,8 +28,11 @@ const bitset<20> winningPosO[] = {
     0b00001000100010000000,
 };
 
+struct boardCoords {
+    int board, piece;
+};
+
 class GameState {
-    
     private:
 
     /**
@@ -38,7 +42,7 @@ class GameState {
      * 4: Is there a required board (1=yes, 0=no)
      * 5: Player to move (1=X, 0=O)
      */ 
-    char info;
+    int info; 
 
     std::bitset<20> board[9];
 
@@ -96,16 +100,20 @@ class GameState {
     }
 
     public:
+    GameState() {
+        info = 32;  // Default is X to move
+    }
+
     void setToMove(int m) {
         /**
          * Sets the player to move
          * 1:X
          * 2:O
          */
-        if (m) {
+        if (m == 1) {
             // Set bit 5 of info to 1
             info |= 1 << 5;
-        } else if (!m) {
+        } else {
             // Set bit 5 of info to 0
             info &= ~(1 << 5);
         }
@@ -119,7 +127,7 @@ class GameState {
          */
         // Check bit 5 of info is set
         char toMove = 1 << 5;
-        toMove |= info;
+        toMove &= info;
         if (toMove) {
             return 1;
         } else {
@@ -129,10 +137,16 @@ class GameState {
 
     void setRequiredBoard(int requiredBoard) {
         /**
-         * Sets the required board for the next move.
+         * Sets the required board for the next move. If the board is already claimed, set no required board.
          * 0-8 = that board to move on
          * -1 = no required board
          */
+
+        // If the board is claimed
+        if (board[requiredBoard][0] || board[requiredBoard][1]) {
+            requiredBoard = -1;
+        }
+
 
         // set bit 4 to 0 if there is no required board
         if (requiredBoard == -1) {
@@ -142,10 +156,12 @@ class GameState {
             info |= 1 << 4;
 
             // Set bits 0-3 to 0 while leaving everything else untouched
-            info &= ~(0) << 4;
+            info &= 0b111111111000;
 
             // Set bits 0-3 to the correct required board
             info |= requiredBoard;
+
+
         }
     }
 
@@ -158,7 +174,7 @@ class GameState {
 
         // Check if there is a required board
         char requiredBoard = 1 << 4;
-        requiredBoard |= info;
+        requiredBoard &= info;
 
         if (requiredBoard) {
             requiredBoard = 15;  // Sets the first 4 bits to 1
@@ -220,10 +236,19 @@ class GameState {
 
     void move(int boardLoaction, int pieceLocation) {
         /**
-         * Performs the specificed move on the board, moving the piece whose turn it is.
+         * Performs the specificed move on the board, moving the piece whose turn it is, and flipping toMove.
          */
 
         setPosition(boardLoaction, pieceLocation, getToMove());
+        updateSignleMiniboardStatus(boardLoaction);
+        setRequiredBoard(pieceLocation);
+
+        // Flip the player to mvoe
+        if (getToMove() == 1) {
+            setToMove(2);
+        } else {
+            setToMove(1);
+        }
     }
 
     void updateMiniboardStatus() {
@@ -236,34 +261,42 @@ class GameState {
         for (int i = 0; i <= 8; i++) {
 
             // Check if already marked as a finished position
-            if (board[i][0] || board[i][1]) {
-                continue;
-            }
-
-            int result = checkMiniboardResults(board[i]);
-
-            // Tie
-            if (!result) {
-                continue;
-            }
-
-            // X Wins
-            else if (result == 1) {
-                board[i][0] = 1;
-            }
-
-            // O Wins
-            else if (result == 2) {
-                board[i][1] = 1;
-            }
-
-            // Tie
-            else {
-                board[i][0] = 1;
-                board[i][1] = 1;
-            }
+            updateSignleMiniboardStatus(i);
         }
 
+    }
+
+    void updateSignleMiniboardStatus(int boardIndex) {
+        /**
+         * Updates the status of a single miniboard to see if it is claimed.
+         */
+        // Check if already marked as a finished position
+        if (board[boardIndex][0] || board[boardIndex][1]) {
+            return;
+        }
+
+        int result = checkMiniboardResults(board[boardIndex]);
+
+        // Tie
+        if (!result) {
+            return;
+        }
+
+        // X Wins
+        else if (result == 1) {
+            board[boardIndex][0] = 1;
+        }
+
+        // O Wins
+        else if (result == 2) {
+            board[boardIndex][1] = 1;
+        }
+
+        // Tie
+        else {
+            board[boardIndex][0] = 1;
+            board[boardIndex][1] = 1;
+        }
     }
 
     int getBoardStatus(int boardLocation) {
@@ -344,10 +377,167 @@ class GameState {
 
     }
 
+    GameState getCopy() {
+        /**
+         * Gets a copy of the board
+         */
+
+        GameState copyBoard;
+
+        // Copy the board
+        for(int i = 0; i < 9; i++) {
+            copyBoard.board[i] = board[i];
+        }
+        copyBoard.info = info;
+
+        return copyBoard;
+    }
+
     vector<GameState> allPossibleMoves() {
         vector<GameState> allMoves;
 
-        
+        int requiredBoard = getRequiredBoard();
+
+        // If there is a required board
+        if (requiredBoard > -1) {
+
+            // Check every spot on the required board
+            for (int i = 0; i < 9; i++) {
+                int location = 2 + (i * 2);
+
+                // If the spot is empty, add this as a move
+                if (!board[requiredBoard][location] && !board[requiredBoard][location + 1]) {
+                    GameState newBoard = getCopy();
+
+                    newBoard.move(requiredBoard, i);
+
+                    allMoves.push_back(newBoard);
+
+                }
+            }
+        } else {
+
+            // Loop every board
+            for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
+
+                for (int i = 0; i < 9; i++) {
+                    int location = 2 + (i * 2);
+
+                    // If the spot are empty, add this as a move
+                    if (!board[boardIndex][location] && !board[boardIndex][location + 1]) {
+                        GameState newBoard = getCopy();
+
+                        newBoard.move(boardIndex, i);
+
+                        allMoves.push_back(newBoard);
+
+                    }
+                }
+
+            }
+        }
+
+        return allMoves;
+
+    }
+
+    boardCoords absoluteIndexToBoardAndPiece(int i) {
+        /**
+         * Gets the board and piece of an absolute index of the full size 9x9 board.
+         */
+
+        /*
+        i = index
+        gx = global x value (independent of board)
+        gy = same
+
+        lx = local x value (within board)
+        ly = same
+
+        bx = x value of the whole board
+        by = same
+
+        pi = piece index
+        bi = board index
+        */
+        int gx, gy, lx, ly, bx, by, pi, bi;
+        boardCoords result;
+
+        gx = i % 9;
+        gy = i / 9;
+
+        lx = gx % 3;
+        ly = gy % 3;
+
+        bx = (i % 9) / 3;
+        by = i / 27;
+
+        pi = ly * 3 + lx;
+        bi = by * 3 + bx;
+
+        result.board = bi;
+        result.piece = pi;
+
+        return result;
+    }
+
+    void displayGame() {
+        /**
+         * Converts the current board to a human-readable string representation and writes it to cout.
+         */
+
+        if (getToMove() == 1) {
+            cout << "X to move\n";
+        } else {
+            cout << "O to move\n";
+        }
+
+        int requiredBoard = getRequiredBoard();
+        if (requiredBoard != -1) {
+            cout << "Required board: " << requiredBoard << '\n';
+        } else {
+            cout << "Required board: None\n";
+        }
+
+        int absolutePieceIndex, location;
+        boardCoords coords;
+
+        for (int row = 0; row < 9; row++) {
+            for (int boardRow = 0; boardRow < 3; boardRow++) {
+
+                for (int col = 0; col < 3; col++) {
+                    absolutePieceIndex = (row * 9) + (boardRow * 3) + col;
+                    coords = absoluteIndexToBoardAndPiece(absolutePieceIndex);
+                    location = 2 + (2 * coords.piece);
+
+                    if (board[coords.board][location]) {
+                        cout << "\033[31mX\033[0m";
+                    } else if (board[coords.board][location + 1]) {
+                        cout << "\033[94mO\033[0m";
+                    } else {
+                        cout << " ";
+                    }
+
+                    // Give a divider if not on the last one
+                    if (col != 2) {
+                        cout << " | ";
+                    }
+                    
+
+                }
+
+                cout << "\\\\ ";
+
+            }
+
+            if ((row + 1) % 3 != 0){
+                cout << "\n---------   ---------   ---------   \n";
+            } else {
+                cout << "\n=================================\n";
+            }
+
+        }
+
     }
 };
 
@@ -363,24 +553,15 @@ class Rectangle {
 int main() {
     GameState myboard;
 
+    myboard.move(4, 4);
+    myboard.displayGame();
 
-    myboard.updateMiniboardStatus();
-    cout << myboard.getStatus() << '\n';
+    vector<GameState> allMoves = myboard.allPossibleMoves();
 
-    myboard.setPosition(0, 0, 1);
-    myboard.setPosition(0, 1, 1);
-    myboard.setPosition(0, 2, 1);
-
-    myboard.setPosition(1, 0, 1);
-    myboard.setPosition(1, 1, 1);
-    myboard.setPosition(1, 2, 1);
-
-    myboard.setPosition(2, 0, 1);
-    myboard.setPosition(2, 1, 1);
-    myboard.setPosition(2, 2, 1);
-
-    myboard.updateMiniboardStatus();
-    cout << myboard.getStatus() << '\n';
+    cout << "ALL POSSIBLE MOVES!!!!!" << '\n';
+    for (int i = 0; i < allMoves.size(); i++) {
+        allMoves[i].displayGame();
+    }
 
 
     return 0;
