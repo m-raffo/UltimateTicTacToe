@@ -31,6 +31,10 @@ struct boardCoords {
     int board, piece;
 };
 
+int checkMiniboardResults(bitset<20> miniboard);
+
+int getMiniboardResults(bitset<20> miniboard);
+
 class GameState {
     private:
         /**
@@ -40,13 +44,16 @@ class GameState {
          * 4: Is there a required board (1=yes, 0=no)
          * 5: Player to move (1=X, 0=O)
          */ 
-        int info;
+        
 
-        bitset<20> board[9];
+        
 
-        int checkMiniboardResults(bitset<20> miniboard);
+        
 
     public:
+    int info;
+        bitset<20> board[9];
+    
         GameState();
 
         void setToMove(int m);

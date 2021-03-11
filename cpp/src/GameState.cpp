@@ -32,7 +32,7 @@ using namespace std;
 
 
 
-    int GameState::checkMiniboardResults(bitset<20> miniboard) {
+    int checkMiniboardResults(bitset<20> miniboard) {
         /**
          * Evaluates the given miniboard to check for wins.
          * 0: Ongoing game
@@ -83,6 +83,37 @@ using namespace std;
         }
 
         return 0;
+    }
+
+
+    int getMiniboardResults(bitset<20> miniboard) {
+        /**
+         * Gets result if miniboard has been marked with final result. Will not check for wins for the benefit of computation speed.
+         * 0: Ongoing game
+         * 1: X wins
+         * 2: O wins
+         * 3: Tie
+         */
+
+        // Tie
+        if (miniboard[0] && miniboard[1]) {
+            return 3;
+        }
+
+        // X wins
+        else if (miniboard[0]) {
+            return 1;
+        }
+
+        // O wins
+        else if (miniboard[1]) {
+            return 2;
+        }
+
+        // Ongoing game
+        else {
+            return 0;
+        }
     }
 
     GameState::GameState() {
@@ -141,7 +172,7 @@ using namespace std;
             info |= 1 << 4;
 
             // Set bits 0-3 to 0 while leaving everything else untouched
-            info &= 0b111111111000;
+            info &= 0b111111110000;
 
             // Set bits 0-3 to the correct required board
             info |= requiredBoard;

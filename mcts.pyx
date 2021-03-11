@@ -348,7 +348,7 @@ cdef float[:] calc_significance(int [:, :] board):
     return significances
 
 
-cdef float eval_board_one_side(int[:, :]board, constants=None):
+cpdef float eval_board_one_side(int[:, :]board, constants=None):
     """
     Calculate an evaluation of a full board for one side
     :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information
@@ -372,7 +372,7 @@ cdef float eval_board_one_side(int[:, :]board, constants=None):
     return final_eval
 
 
-cdef float eval_board(int[:, :] board, constants=None):
+cpdef float eval_board(int[:, :] board, constants=None):
     """
     Calculate a full evaluation for both sides of a large board.
     :param constants: Optional, the constants to be used when evaluating the position. See mini_board_eval for more information.

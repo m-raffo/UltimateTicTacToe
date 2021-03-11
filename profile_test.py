@@ -32,6 +32,38 @@ current_game_node.add_children()
 
 
 if __name__ == "__main__":
+
+    b = GameState()
+    b.move(4, 5)
+
+    print(
+        timeit.timeit(
+            # "a = mcts.eval_board(myboard.board)"
+            "\nb = myboard.all_possible_moves()",
+            number=1,
+            setup="""
+from gamestate import GameState
+import mcts
+myboard = GameState()
+myboard.move(5, 0)
+myboard.move(4, 5)
+myboard.move(0, 1)
+myboard.move(1, 1)
+myboard.move(1, 8)
+myboard.move(8, 4)
+myboard.move(4, 3)
+myboard.move(3, 0)
+myboard.move(0, 0)
+myboard.move(0, 6)
+myboard.move(6, 3)
+myboard.move(3, 1)
+myboard.move(1, 2)
+    """,
+        )
+    )
+
+    exit()
+
     #     a = np.array([0, 0, 0])
     #     b = np.array([0, 0, 0])
     #
