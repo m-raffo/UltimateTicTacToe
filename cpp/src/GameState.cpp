@@ -1,3 +1,4 @@
+#include "GameState.h"
 #include <iostream>
 #include <bitset>
 #include <vector>
@@ -6,47 +7,32 @@
 using namespace std;
 
 // Masks for winning positions
-const bitset<20> winningPosX[] = {
-    0b00000000000001010100,
-    0b00000001010100000000,
-    0b01010100000000000000,
-    0b00000100000100000100,
-    0b00010000010000010000,
-    0b01000001000001000000,
-    0b01000000010000000100,
-    0b00000100010001000000,
-};
+// const bitset<20> winningPosX[] = {
+//     0b00000000000001010100,
+//     0b00000001010100000000,
+//     0b01010100000000000000,
+//     0b00000100000100000100,
+//     0b00010000010000010000,
+//     0b01000001000001000000,
+//     0b01000000010000000100,
+//     0b00000100010001000000,
+// };
 
-const bitset<20> winningPosO[] = {
-    0b00000000000010101000,
-    0b00000010101000000000,
-    0b10101000000000000000,
-    0b00001000001000001000,
-    0b00100000100000100000,
-    0b10000010000010000000,
-    0b10000000100000001000,
-    0b00001000100010000000,
-};
+// const bitset<20> winningPosO[] = {
+//     0b00000000000010101000,
+//     0b00000010101000000000,
+//     0b10101000000000000000,
+//     0b00001000001000001000,
+//     0b00100000100000100000,
+//     0b10000010000010000000,
+//     0b10000000100000001000,
+//     0b00001000100010000000,
+// };
 
-struct boardCoords {
-    int board, piece;
-};
 
-class GameState {
-    private:
 
-    /**
-     * Info - stores information about the GameState that is not stored on the board
-     * Bits:
-     * 0-3: Required board to move on
-     * 4: Is there a required board (1=yes, 0=no)
-     * 5: Player to move (1=X, 0=O)
-     */ 
-    int info; 
 
-    std::bitset<20> board[9];
-
-    int checkMiniboardResults(bitset<20> miniboard) {
+    int GameState::checkMiniboardResults(bitset<20> miniboard) {
         /**
          * Evaluates the given miniboard to check for wins.
          * 0: Ongoing game
@@ -99,12 +85,11 @@ class GameState {
         return 0;
     }
 
-    public:
-    GameState() {
+    GameState::GameState() {
         info = 32;  // Default is X to move
     }
 
-    void setToMove(int m) {
+    void GameState::setToMove(int m) {
         /**
          * Sets the player to move
          * 1:X
@@ -119,7 +104,7 @@ class GameState {
         }
     }
 
-    int getToMove() {
+    int GameState::getToMove() {
         /**
          * Sets the player to move
          * 1:X
@@ -135,7 +120,7 @@ class GameState {
         }
     }
 
-    void setRequiredBoard(int requiredBoard) {
+    void GameState::setRequiredBoard(int requiredBoard) {
         /**
          * Sets the required board for the next move. If the board is already claimed, set no required board.
          * 0-8 = that board to move on
@@ -165,7 +150,7 @@ class GameState {
         }
     }
 
-    int getRequiredBoard() {
+    int GameState::getRequiredBoard() {
         /**
          * Gets the required board for the next move.
          * 0-8: That board must be moved on
@@ -186,7 +171,7 @@ class GameState {
         }
     }
 
-    int getPosition(int boardLocation, int pieceLocation) {
+    int GameState::getPosition(int boardLocation, int pieceLocation) {
         /**
          * Gets the piece in the specified location in the board.
          * 
@@ -210,7 +195,7 @@ class GameState {
         
     }
 
-    void setPosition(int boardLocation, int pieceLocation, int piece) {
+    void GameState::setPosition(int boardLocation, int pieceLocation, int piece) {
         /**
          * Sets the specificed location in the board to the given piece.
          * 
@@ -234,7 +219,7 @@ class GameState {
         }
     }
 
-    void move(int boardLoaction, int pieceLocation) {
+    void GameState::move(int boardLoaction, int pieceLocation) {
         /**
          * Performs the specificed move on the board, moving the piece whose turn it is, and flipping toMove.
          */
@@ -251,7 +236,7 @@ class GameState {
         }
     }
 
-    void updateMiniboardStatus() {
+    void GameState::updateMiniboardStatus() {
         /**
          * Updates the game statuses of all the miniboards, checking to see if any of them are won.
          * If a position is won for both O and X and not already marked, it will be marked as a win for X.
@@ -266,7 +251,7 @@ class GameState {
 
     }
 
-    void updateSignleMiniboardStatus(int boardIndex) {
+    void GameState::updateSignleMiniboardStatus(int boardIndex) {
         /**
          * Updates the status of a single miniboard to see if it is claimed.
          */
@@ -299,7 +284,7 @@ class GameState {
         }
     }
 
-    int getBoardStatus(int boardLocation) {
+    int GameState::getBoardStatus(int boardLocation) {
         /**
          * Gets the status of the given miniboard.
          * Important: GameState.updateMiniboardStatus() MUST be called before this function to ensure correct results.
@@ -333,7 +318,7 @@ class GameState {
         }
     }
 
-    int getStatus() {
+    int GameState::getStatus() {
         /**
          * Gets the status of the entire game.
          * Important: GameState.updateMiniboardStatus() MUST be called before this function to ensure correct results.
@@ -377,7 +362,7 @@ class GameState {
 
     }
 
-    GameState getCopy() {
+    GameState GameState::getCopy() {
         /**
          * Gets a copy of the board
          */
@@ -393,7 +378,7 @@ class GameState {
         return copyBoard;
     }
 
-    vector<GameState> allPossibleMoves() {
+    vector<GameState> GameState::allPossibleMoves() {
         vector<GameState> allMoves;
 
         int requiredBoard = getRequiredBoard();
@@ -441,7 +426,7 @@ class GameState {
 
     }
 
-    boardCoords absoluteIndexToBoardAndPiece(int i) {
+    boardCoords GameState::absoluteIndexToBoardAndPiece(int i) {
         /**
          * Gets the board and piece of an absolute index of the full size 9x9 board.
          */
@@ -481,7 +466,7 @@ class GameState {
         return result;
     }
 
-    void displayGame() {
+    void GameState::displayGame() {
         /**
          * Converts the current board to a human-readable string representation and writes it to cout.
          */
@@ -539,30 +524,3 @@ class GameState {
         }
 
     }
-};
-
-class Rectangle {
-    public:
-        int width, height;
-
-        int area(void) {
-            return width * height;
-        };
-};
-
-int main() {
-    GameState myboard;
-
-    myboard.move(4, 4);
-    myboard.displayGame();
-
-    vector<GameState> allMoves = myboard.allPossibleMoves();
-
-    cout << "ALL POSSIBLE MOVES!!!!!" << '\n';
-    for (int i = 0; i < allMoves.size(); i++) {
-        allMoves[i].displayGame();
-    }
-
-
-    return 0;
-}
