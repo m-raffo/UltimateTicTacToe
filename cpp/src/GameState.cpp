@@ -118,6 +118,8 @@ using namespace std;
 
     GameState::GameState() {
         info = 32;  // Default is X to move
+        previousMove[0] = -1;
+        previousMove[1] = -1;
     }
 
     void GameState::setToMove(int m) {
@@ -265,6 +267,9 @@ using namespace std;
         } else {
             setToMove(1);
         }
+
+        previousMove[0] = boardLoaction;
+        previousMove[1] = pieceLocation;
     }
 
     void GameState::updateMiniboardStatus() {
@@ -361,6 +366,8 @@ using namespace std;
          * @return the status
          */
         bitset<20> boardResults;
+
+        // TODO: Assign two bits in GameState.info to track if the game has been evaluated to a winning position
 
         for (int i = 0; i <= 8; i++) {
             // The location in board results to store this result

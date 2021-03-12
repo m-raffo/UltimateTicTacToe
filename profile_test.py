@@ -24,7 +24,7 @@ b.board = np.array(
     dtype=np.int32,
 )
 
-print(b)
+# print(b)
 
 current_game_node = mcts.Node(b)
 
@@ -39,14 +39,15 @@ if __name__ == "__main__":
     print(
         timeit.timeit(
             # "a = mcts.eval_board(myboard.board)"
-            "\nb = myboard.all_possible_moves()",
+            # "\nb = myboard.all_possible_moves()",
+            "\nb  = print(mcts.minimax_search_seq(n, 8, False)[0])",
             number=1,
             setup="""
 from gamestate import GameState
 import mcts
 myboard = GameState()
-myboard.move(5, 0)
 myboard.move(4, 5)
+myboard.move(5, 0)
 myboard.move(0, 1)
 myboard.move(1, 1)
 myboard.move(1, 8)
@@ -57,7 +58,9 @@ myboard.move(0, 0)
 myboard.move(0, 6)
 myboard.move(6, 3)
 myboard.move(3, 1)
-myboard.move(1, 2)
+# myboard.move(1, 2)
+print(myboard)
+n = mcts.Node(myboard)
     """,
         )
     )

@@ -52,6 +52,8 @@ class GameState {
 
     public:
     int info;
+    char previousMove[2];
+
         bitset<20> board[9];
     
         GameState();
