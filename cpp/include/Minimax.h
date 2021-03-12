@@ -73,4 +73,4 @@ class Node{
 float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer);
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX);
-boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX)
+boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX);
