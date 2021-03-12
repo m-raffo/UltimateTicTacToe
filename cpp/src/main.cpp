@@ -10,42 +10,107 @@ using namespace std;
 int main() {
     GameState myboard;
 
-    myboard.move(4, 5);
-    myboard.move(5, 0);
-    myboard.move(0, 1);
-    myboard.move(1, 1);
-    myboard.move(1, 8);
-    myboard.move(8, 4);
-    myboard.move(4, 3);
-    myboard.move(3, 0);
-    myboard.move(0, 0);
-    myboard.move(0, 6);
-    myboard.move(6, 3);
-    myboard.move(3, 1);
+    // myboard.move(4, 5);
+    // myboard.move(5, 0);
+    // myboard.move(0, 1);
+    // myboard.move(1, 1);
+    // myboard.move(1, 8);
+    // myboard.move(8, 4);
+    // myboard.move(4, 3);
+    // myboard.move(3, 0);
+    // myboard.move(0, 0);
+    // myboard.move(0, 6);
+    // myboard.move(6, 3);
+    // myboard.move(3, 1);
     // myboard.move(1, 2);
+
+    // myboard.move(4, 4);
+
+    cout << (numeric_limits<float>::infinity() == numeric_limits<float>::infinity());
+
+    myboard.move(3, 8);
+    myboard.move(8, 2);
 
     myboard.displayGame();
 
 
-    auto start = chrono::high_resolution_clock::now();
+    int board, piece;
+
+    while (true) {
+
+        cout << "\n\n";
+        myboard = minimaxSearch(myboard, 2, true);
+
+        myboard.displayGame();
+
+        if (myboard.getStatus() == 1) {
+            cout << "X WINS!!!\n";
+            return 0;
+        } else if (myboard.getStatus() == 2) {
+            cout << "O WINS!!!\n";
+            return 0;
+        } else if (myboard.getStatus() == 3) {
+            cout << "TIE GAME!!!\n";
+            return 0;
+        }
+        cout << "\n\n";
+
+        myboard = minimaxSearch(myboard, 6, false);
+
+        myboard.displayGame();
+
+        if (myboard.getStatus() == 1) {
+            cout << "X WINS!!!\n";
+            return 0;
+        } else if (myboard.getStatus() == 2) {
+            cout << "O WINS!!!\n";
+            return 0;
+        } else if (myboard.getStatus() == 3) {
+            cout << "TIE GAME!!!\n";
+            return 0;
+        }
+
+    }
+
+
+    while (true) {
+
+        if (myboard.getRequiredBoard() != -1) {
+            cout << "BOARD: " << myboard.getRequiredBoard();
+            board = myboard.getRequiredBoard();
+        } else {
+            cout << "BOARD: ";
+            cin >> board;
+        }
+        
+        cout << "\nPIECE: ";
+        cin >> piece;
+        cout << "\n";
+
+        myboard.move(board, piece);
+
+        myboard.displayGame();
+
+        auto start = chrono::high_resolution_clock::now();
 
 
 
-    // vector<GameState> allMoves = myboard.allPossibleMoves();
-    // cout << "IN BETWEEN \n";
-    float evaluation = evaluate(myboard);
+        // vector<GameState> allMoves = myboard.allPossibleMoves();
+        // cout << "IN BETWEEN \n";
 
-    GameState bestMove = minimaxSearch(myboard, 8, true);
+        myboard = minimaxSearch(myboard, 6, true);
 
 
-    auto stop = chrono::high_resolution_clock::now();
+        auto stop = chrono::high_resolution_clock::now();
 
-    bestMove.displayGame();
 
-    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+        auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
 
-    cout << "TIME TAKEN ";
-    cout << duration.count() << " milliseconds\n\n\n";
+        cout << "TIME TAKEN ";
+        cout << duration.count() << " milliseconds\n\n\n";
 
+        myboard.displayGame();
+
+    }
     return 0;
 }

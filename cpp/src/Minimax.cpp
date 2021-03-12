@@ -182,6 +182,10 @@ Node::Node (GameState currentBoard, int currentDepth){
     depth = currentDepth;
 }
 
+Node::Node() {
+
+};
+
 void Node::addChildren() {
     /**
      * Add all possible moves as children. Checks if children have already been added and will not add again.
@@ -201,6 +205,13 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
      */
 
     float bestEval, newEval;
+
+    const float inf = numeric_limits<float>::infinity();
+
+    // When a forced loss position is evaluated before a forced win position,
+    // node.infDepth is set. When a win position is evaluated for the first time,
+    // node.infDepth must be reset to get an accurate reading for the forced win
+    bool resetInfDepth = false;
 
     // Check if depth is reached or game is over
     if (depth <= 0 || node.board.getStatus() != 0) {
@@ -222,6 +233,7 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
 
     node.addChildren();
 
+    
     for (Node i : node.children) {
         newEval = minimax(i, depth - 1, alpha, beta, !maximizingPlayer);
 
@@ -230,14 +242,21 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
             bestEval = (newEval > bestEval) ? newEval : bestEval;
 
             // If the position is lost, the best option is the one furthest from game over
-            if (newEval == -1 * numeric_limits<float>::infinity()) {
+            if (newEval == -1 * numeric_limits<float>::infinity() && bestEval == newEval) {
                 if (node.infDepth == -1 || node.infDepth < i.infDepth) {
+                    resetInfDepth = true;
                     node.infDepth = i.infDepth;
                 }
             }
 
             // If the position is won, the best option is the one closest from game over
             else if (newEval == numeric_limits<float>::infinity()) {
+                // if (resetInfDepth) {
+                //     resetInfDepth = false;
+                //     cout << "Resetting infdepth " << node.infDepth <<"\n";
+                //     node.infDepth = -1;
+                // }
+
                 if (node.infDepth == -1 || node.infDepth > i.infDepth) {
                     node.infDepth = i.infDepth;
                 }
@@ -254,14 +273,20 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
             bestEval = (newEval < bestEval) ? newEval : bestEval;
 
             // If the position is lost, the best option is the one furthest from game over
-            if (newEval == numeric_limits<float>::infinity()) {
+            if (newEval == numeric_limits<float>::infinity() && bestEval == newEval) {
                 if (node.infDepth == -1 || node.infDepth < i.infDepth) {
+                    resetInfDepth = true;
                     node.infDepth = i.infDepth;
                 }
             }
 
             // If the position is won, the best option is the one closest from game over
             else if (newEval == -1 * numeric_limits<float>::infinity()) {
+                // if (resetInfDepth) {
+                //     resetInfDepth = false;
+                //     node.infDepth = -1;
+                // }
+
                 if (node.infDepth == -1 || node.infDepth > i.infDepth) {
                     node.infDepth = i.infDepth;
                 }
@@ -284,13 +309,20 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
 
     start.addChildren();
 
-    float bestEval = numeric_limits<float>::infinity() * -1;
+    const float inf = numeric_limits<float>::infinity();
+
+    float bestEval = inf * -1;
     float newEval;
     Node bestMove = start.children[0];
     int evalMultiplier = (playAsX) ? 1 : -1;
 
+    int shortestWinDepth = numeric_limits<int>::max();
+    Node winNode, loseNode;
+    int longestLoseDepth = numeric_limits<int>::min();
+
+
     for (Node i : start.children) {
-        newEval = minimax(i, depth - 1, -1 * numeric_limits<float>::infinity(), numeric_limits<float>::infinity(), !playAsX);
+        newEval = minimax(i, depth - 1, -1 * inf, inf, !playAsX);
 
         newEval *= evalMultiplier;
 
@@ -299,7 +331,36 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
             bestMove = i;
         }
 
+        // If a forced win is possible, find the shortest path
+        if (newEval == inf && i.infDepth < shortestWinDepth) {
+            shortestWinDepth = i.infDepth;
+            winNode = i;
+        }
+        
+        // If a forced loss is possible, find the longest path
+        else if (newEval == -1 * inf && i.infDepth > longestLoseDepth) {
+            longestLoseDepth = i.infDepth;
+            loseNode = i;
+        }
+
+    }
+
+    cout << bestEval << '\n';
+
+    // Return the correct forced result board if necessary
+    if (bestEval == inf) {
+        cout << "Forced win: " << shortestWinDepth << '\n';
+        return winNode.board;
+    }
+    
+    if (bestEval == -1 * inf) {
+        cout << "Forced loss: " << longestLoseDepth << '\n';
+        return loseNode.board;
     }
 
     return bestMove.board;
 };
+
+boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX) {
+    return minimaxSearch(position, depth, playAsX).previousMove;
+}

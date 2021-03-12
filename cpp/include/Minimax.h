@@ -10,7 +10,7 @@ float evaluate(GameState board);
 
 float miniboardEvalOneSide(bitset<20> miniboard, int side);
 
-const int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 1;
+const int c1 = 5, c2 = 1, cw = 25, cl = 0, ct = 1;
 
 const int winningPossibilities[9][4][2] = {
     {{1, 2}, {4, 8}, {3, 6}, {-1, -1}},
@@ -56,9 +56,10 @@ class Node{
 
     public:
         Node(GameState currentBoard, int currentDepth);
+        Node();
         GameState board;
 
-        int infDepth;
+        int infDepth = -1;
         int depth;
         bool pruned = false;
 
@@ -72,3 +73,4 @@ class Node{
 float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer);
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX);
+boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX)

@@ -29,7 +29,78 @@ using namespace std;
 //     0b00001000100010000000,
 // };
 
+    int checkMiniboardResultsWithTie(bitset<20> miniboard) {
+        /**
+         * Evaluates the give miniboard to check for a win, including the possibility that a square is tied.
+         * This is necessary for checking for wins on the larger, overall board.
+         * 0: Ongoing game
+         * 1: X win
+         * 2: O win
+         * 3: Tie
+         */
 
+        bitset<20> posToCheck;
+
+        // If the position is empty, return 0
+        if (miniboard == posToCheck) {
+            return 0;
+        }
+
+        bool emptySpace = false;
+
+        // Check each winning possibility
+        for (int j = 0; j <= 7; j++) {
+            // Match the position with the winning mask
+            posToCheck = winningPosX[j];
+            posToCheck &= miniboard;
+
+            // If the position matches the winning mask, check that none of the squares are claimed by O
+            if (posToCheck == winningPosX[j]) {
+
+                // Check that the winningPosO mask is all negative on the miniboard
+                posToCheck = winningPosO[j];
+                posToCheck &= ~(miniboard);
+
+                // If O has no claims to squares that X used to win, it is a won position
+                if (posToCheck == winningPosO[j]) {
+                    return 1;
+                }
+            }
+
+            // Same for O
+            posToCheck = winningPosO[j];
+            posToCheck &= miniboard;
+
+            if (posToCheck == winningPosO[j]) {
+
+                // Check that the winningPosX mask is all negative on the miniboard
+                posToCheck = winningPosX[j];
+                posToCheck &= ~(miniboard);
+
+                // If X has no claims to squares that X used to win, it is a won position
+                if (posToCheck == winningPosX[j]) {
+                    return 2;
+                }
+            }
+        }
+
+        // Check if the position is completely filled
+        for (int j = 0; j <= 8; j++) {
+            int location = 2 + (j * 2);
+            if (!miniboard[location] && !miniboard[location + 1]) {
+                emptySpace = true;
+                break;
+            }
+        }
+
+        // If there are no empty spaces, mark the position as a tie
+        if (!emptySpace) {
+            return 3;
+        }
+
+        // No wins found and not a tie
+        return 0;
+    }
 
 
     int checkMiniboardResults(bitset<20> miniboard) {
@@ -48,19 +119,6 @@ using namespace std;
         }
 
         bool emptySpace = false;
-        // Check if the position is completely filled
-        for (int j = 0; j <= 8; j++) {
-            int location = 2 + (j * 2);
-            if (!miniboard[location] && !miniboard[location + 1]) {
-                emptySpace = true;
-                break;
-            }
-        }
-
-        // If there are no empty spaces, mark the position as a tie
-        if (!emptySpace) {
-            return 3;
-        }
 
         // Check each winning possibility
         for (int j = 0; j <= 7; j++) {
@@ -80,6 +138,20 @@ using namespace std;
             if (posToCheck == winningPosO[j]) {
                 return 2;
             }
+        }
+
+        // Check if the position is completely filled
+        for (int j = 0; j <= 8; j++) {
+            int location = 2 + (j * 2);
+            if (!miniboard[location] && !miniboard[location + 1]) {
+                emptySpace = true;
+                break;
+            }
+        }
+
+        // If there are no empty spaces, mark the position as a tie
+        if (!emptySpace) {
+            return 3;
         }
 
         return 0;
@@ -118,8 +190,8 @@ using namespace std;
 
     GameState::GameState() {
         info = 32;  // Default is X to move
-        previousMove[0] = -1;
-        previousMove[1] = -1;
+        previousMove.board = -1;
+        previousMove.piece = -1;
     }
 
     void GameState::setToMove(int m) {
@@ -268,8 +340,8 @@ using namespace std;
             setToMove(1);
         }
 
-        previousMove[0] = boardLoaction;
-        previousMove[1] = pieceLocation;
+        previousMove.board = boardLoaction;
+        previousMove.piece = pieceLocation;
     }
 
     void GameState::updateMiniboardStatus() {
@@ -298,7 +370,7 @@ using namespace std;
 
         int result = checkMiniboardResults(board[boardIndex]);
 
-        // Tie
+        // Ongoing game
         if (!result) {
             return;
         }
@@ -389,14 +461,15 @@ using namespace std;
             case 3:
                 boardResults[location] = 1;
                 boardResults[location + 1] = 1;
+                break;
             
-            // Ongoing game
+            // Ongoing game or tie - neither person wins the board
             default:
                 break;
             }
         }
 
-        return checkMiniboardResults(boardResults);
+        return checkMiniboardResultsWithTie(boardResults);
 
     }
 
@@ -442,6 +515,10 @@ using namespace std;
 
             // Loop every board
             for (int boardIndex = 0; boardIndex < 9; boardIndex++) {
+
+                // If the game is over in this board, no moves are possible on it
+                if (getBoardStatus(boardIndex))
+                    continue;
 
                 for (int i = 0; i < 9; i++) {
                     int location = 2 + (i * 2);

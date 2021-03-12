@@ -28,9 +28,10 @@ const bitset<20> winningPosO[] = {
 };
 
 struct boardCoords {
-    int board, piece;
+    char board, piece;
 };
 
+int checkMiniboardResultsWithTie(bitset<20> miniboard);
 int checkMiniboardResults(bitset<20> miniboard);
 
 int getMiniboardResults(bitset<20> miniboard);
@@ -52,7 +53,7 @@ class GameState {
 
     public:
     int info;
-    char previousMove[2];
+    boardCoords previousMove;
 
         bitset<20> board[9];
     
