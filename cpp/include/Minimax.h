@@ -70,7 +70,25 @@ class Node{
 
 };
 
+struct nodeAndEval {
+    Node n;
+    float e;
+};
+
+bool compareEval(nodeAndEval a, nodeAndEval b);
+
+
+struct timeLimitedSearchResult {
+    bool complete = false;
+    float result;
+};
+
 float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer);
+timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time);
+
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX);
 boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX);
+
+GameState minimaxSearchTime(GameState position, int time, bool playAsX);
+boardCoords minimaxSearchMove(GameState position, int time, bool playAsX);

@@ -31,4 +31,5 @@ cdef extern from "include/Minimax.h":
         GameState board
 
     cdef boardCoords minimaxSearchMove(GameState, int, bool)
+    cdef boardCoords minimaxSearchMoveTime(GameState, int, bool)
 

@@ -42,7 +42,7 @@ int main() {
 
     cout << (numeric_limits<float>::infinity() == numeric_limits<float>::infinity());
 
-    myboard.move(4, 4);
+    // myboard.move(4, 4);
     // myboard.move(8, 2);
 
     myboard.displayGame();
@@ -50,10 +50,10 @@ int main() {
 
     int board, piece;
 
-    while (false) {
+    while (true) {
 
         cout << "\n\n";
-        myboard = minimaxSearch(myboard, 2, true);
+        myboard = minimaxSearchTime(myboard, 5, true);
 
         myboard.displayGame();
 

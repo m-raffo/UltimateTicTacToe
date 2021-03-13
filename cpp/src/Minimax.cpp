@@ -2,6 +2,8 @@
 #include "GameState.h"
 #include <bitset>
 #include <math.h>
+#include <algorithm>
+#include <ctime>
 
 using namespace std;
 
@@ -220,15 +222,35 @@ void Node::addChildren() {
     }
 }
 
+bool compareEval(nodeAndEval a, nodeAndEval b) {
+    // Return true if the first element should be before the second
+    return a.e > b.e;
+}
+
 float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer) {
+    return minimaxTimeLimited(node, depth, alpha, beta, maximizingPlayer, 0).result;
+};
+
+timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time) {
     /**
      * Calculates the evaluation of the given board to the given depth.
      * Note that updateMiniboardStatus() or updateSignleMiniboardStatus() must be called before this function.
      */
 
+    timeLimitedSearchResult result;
+
+
+    // Check if the search time has expired
+    if (time > 0 && std::time(nullptr) > time) {
+        result.complete = false;
+        result.result = 0;
+        return result;
+    }
+
     float bestEval, newEval;
 
     const float inf = numeric_limits<float>::infinity();
+
 
     // When a forced loss position is evaluated before a forced win position,
     // node.infDepth is set. When a win position is evaluated for the first time,
@@ -244,7 +266,10 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
             node.infDepth = node.depth;
         }
 
-        return bestEval;
+        result.result = bestEval;
+        result.complete = true;
+
+        return result;
     }
 
     // Init with worst outcome, so anything else is always better
@@ -323,7 +348,10 @@ float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingP
         }
     }
 
-    return bestEval;
+    result.complete = true;
+    result.result = bestEval;
+
+    return result;
 };
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX) {
@@ -383,4 +411,100 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
 
 boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX) {
     return minimaxSearch(position, depth, playAsX).previousMove;
-}
+};
+
+GameState minimaxSearchTime(GameState position, int time, bool playAsX) {
+
+    int endTime = std::time(nullptr) + time;
+
+    Node start = Node(position, 0);
+
+    start.addChildren();
+
+    // Keep track of the children and their evaluations
+    int numChildren = start.children.size();
+    int depth = 2;
+    vector<nodeAndEval> childEvals;
+    
+
+    const float inf = numeric_limits<float>::infinity();
+
+    float bestEval = inf * -1;
+    float newEval;
+    Node bestMove = start.children[0];
+    Node bestFullySearchedMove = start.children[0];
+    int evalMultiplier = (playAsX) ? 1 : -1;
+
+    int shortestWinDepth = numeric_limits<int>::max();
+    Node winNode, loseNode;
+    int longestLoseDepth = numeric_limits<int>::min();
+
+    for (Node i : start.children) {
+        nodeAndEval childAndEval;
+        childAndEval.n = i;
+        childAndEval.e = evaluate(i.board) * evalMultiplier;
+        childEvals.push_back(childAndEval);
+    }
+
+
+
+    // Loop until time expires or forced outcome is found
+    while (true) {
+        depth++;
+        std::sort (childEvals.begin(), childEvals.end(), compareEval);
+
+        bestFullySearchedMove = childEvals.at(0).n;
+
+        for (nodeAndEval &j : childEvals) {
+            Node i = j.n;
+            timeLimitedSearchResult result;
+            result = minimaxTimeLimited(i, depth - 1, -1 * inf, inf, !playAsX, endTime);
+
+            // If time has expired, return the best fully searched move
+            if (!result.complete) {
+                return bestFullySearchedMove.board;
+            }
+
+            newEval = result.result;
+
+            newEval *= evalMultiplier;
+
+            // Update the stored eval value of the child
+            j.e = newEval;
+
+            if (newEval > bestEval) {
+                bestEval = newEval;
+                bestMove = i;
+            }
+
+            // If a forced win is possible, find the shortest path
+            if (newEval == inf && i.infDepth < shortestWinDepth) {
+                shortestWinDepth = i.infDepth;
+                winNode = i;
+            }
+            
+            // If a forced loss is possible, find the longest path
+            else if (newEval == -1 * inf && i.infDepth > longestLoseDepth) {
+                longestLoseDepth = i.infDepth;
+                loseNode = i;
+            }
+
+        }
+
+        // Return the correct forced result board if necessary
+        if (bestEval == inf) {
+            cout << "Forced win: " << shortestWinDepth << '\n';
+            return winNode.board;
+        }
+        
+        if (bestEval == -1 * inf) {
+            cout << "Forced loss: " << longestLoseDepth << '\n';
+            return loseNode.board;
+        }
+
+    }
+};
+
+boardCoords minimaxSearchMoveTime(GameState position, int time, bool playAsX) {
+    return minimaxSearchTime(position, time, playAsX).previousMove;
+};

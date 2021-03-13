@@ -30,10 +30,10 @@ HUMAN_PLAY_AS_O = True
 DEPTH1 = 2
 DEPTH2 = 4
 
-DEPTH = 6
+DEPTH = 7
 
 DEPTHS = [3, 4, 6, 8, 10]
-TIME_LIMIT = 4
+TIME_LIMIT = 1
 
 
 def draw_game(screen, game):
@@ -485,7 +485,9 @@ if __name__ == "__main__":
                         game_running = False
                         continue
 
-                    compBoard, compPiece = game.minimax_search_move(DEPTH, True)
+                    compBoard, compPiece = game.minimax_search_move_time(
+                        TIME_LIMIT, True
+                    )
 
                     game.move(compBoard, compPiece)
 
