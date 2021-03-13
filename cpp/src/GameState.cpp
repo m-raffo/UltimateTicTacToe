@@ -489,6 +489,20 @@ using namespace std;
         return copyBoard;
     }
 
+    bool GameState::isValidMove(int board, int piece) {
+        if (getRequiredBoard() != -1) {
+            if (board == getRequiredBoard() && getPosition(board, piece) == 0)  {
+                return true;
+            } 
+        } else {
+            if (getPosition(board, piece) == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     vector<GameState> GameState::allPossibleMoves() {
         vector<GameState> allMoves;
 

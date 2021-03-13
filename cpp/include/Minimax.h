@@ -83,12 +83,21 @@ struct timeLimitedSearchResult {
     float result;
 };
 
-float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer);
-timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time);
+struct constants {
+    int c1 = c1, c2 = c2, cw = cw, cl = cl, ct = ct;
+};
 
+float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, constants c);
+timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time, constants c);
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX);
+GameState minimaxSearch(GameState position, int depth, bool playAsX, constants c);
+
 boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX);
+boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX, constants c);
 
 GameState minimaxSearchTime(GameState position, int time, bool playAsX);
-boardCoords minimaxSearchMove(GameState position, int time, bool playAsX);
+GameState minimaxSearchTime(GameState position, int time, bool playAsX, constants c);
+
+boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX);
+boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX, constants c);

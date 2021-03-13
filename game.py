@@ -33,7 +33,7 @@ DEPTH2 = 4
 DEPTH = 7
 
 DEPTHS = [3, 4, 6, 8, 10]
-TIME_LIMIT = 1
+TIME_LIMIT = 6
 
 
 def draw_game(screen, game):
@@ -434,6 +434,7 @@ if __name__ == "__main__":
                     board, piece = mouse_pos_to_board_and_piece(pygame.mouse.get_pos())
 
                     # TODO: Re-enable valid-move checking
+                    found_board = game.is_valid_move(board, piece)
                     # test_board = minimax_node.board.copy_board()
                     #
                     # test_board.move(board, piece)
@@ -452,13 +453,12 @@ if __name__ == "__main__":
                     #         minimax_node = i
                     #         found_board = True
                     #
-                    # if not found_board:
-                    #     print(
-                    #         "Your move was not found as a valid move. Are you sure you entered it correctly?"
-                    #     )
-                    #     print(minimax_node.children)
-                    #     is_players_move = True
-                    #     continue
+                    if not found_board:
+                        print(
+                            "Your move was not found as a valid move. Are you sure you entered it correctly?"
+                        )
+                        is_players_move = True
+                        continue
 
                     # draw_move(screen, board, piece, "O", font)
 

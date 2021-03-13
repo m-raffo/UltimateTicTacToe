@@ -55,6 +55,8 @@ class GameState {
     int info;
     boardCoords previousMove;
 
+    bool isValidMove(int board, int piece);
+
         bitset<20> board[9];
     
         GameState();

@@ -37,7 +37,7 @@ cdef class PyGameState:
     def minimax_search_move_time(self, time, playAsX):
         cdef boardCoords nextMove
 
-        nextMove = minimaxSearchMoveTime(self.c_gamestate, time, playAsX)
+        nextMove = minimaxSearchTimeMove(self.c_gamestate, time, playAsX)
         return [nextMove.board, nextMove.piece]
 
 
@@ -46,3 +46,6 @@ cdef class PyGameState:
 
     def get_to_move(self):
         return self.c_gamestate.getToMove()
+
+    def is_valid_move(self, board, piece):
+        return bool(self.c_gamestate.isValidMove(board, piece))

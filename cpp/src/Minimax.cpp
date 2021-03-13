@@ -227,11 +227,11 @@ bool compareEval(nodeAndEval a, nodeAndEval b) {
     return a.e > b.e;
 }
 
-float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer) {
-    return minimaxTimeLimited(node, depth, alpha, beta, maximizingPlayer, 0).result;
+float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, constants c) {
+    return minimaxTimeLimited(node, depth, alpha, beta, maximizingPlayer, 0, c).result;
 };
 
-timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time) {
+timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time, constants c) {
     /**
      * Calculates the evaluation of the given board to the given depth.
      * Note that updateMiniboardStatus() or updateSignleMiniboardStatus() must be called before this function.
@@ -282,7 +282,7 @@ timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha,
 
     
     for (Node i : node.children) {
-        newEval = minimax(i, depth - 1, alpha, beta, !maximizingPlayer);
+        newEval = minimax(i, depth - 1, alpha, beta, !maximizingPlayer, c);
 
         if (maximizingPlayer) {
             // Get the highest evaluation
@@ -355,6 +355,12 @@ timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha,
 };
 
 GameState minimaxSearch(GameState position, int depth, bool playAsX) {
+    constants c;
+    
+    return minimaxSearch(position, depth, playAsX, c);
+}
+
+GameState minimaxSearch(GameState position, int depth, bool playAsX, constants c) {
     Node start = Node(position, 0);
 
     start.addChildren();
@@ -372,7 +378,7 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
 
 
     for (Node i : start.children) {
-        newEval = minimax(i, depth - 1, -1 * inf, inf, !playAsX);
+        newEval = minimax(i, depth - 1, -1 * inf, inf, !playAsX, c);
 
         newEval *= evalMultiplier;
 
@@ -410,10 +416,21 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
 };
 
 boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX) {
-    return minimaxSearch(position, depth, playAsX).previousMove;
+    constants c;
+
+    return minimaxSearchMove(position, depth, playAsX, c);
+}
+
+boardCoords minimaxSearchMove(GameState position, int depth, bool playAsX, constants c) {
+    return minimaxSearch(position, depth, playAsX, c).previousMove;
 };
 
-GameState minimaxSearchTime(GameState position, int time, bool playAsX) {
+GameState minimaxSearchTime(GameState position, int time, bool playAsX)  {
+    constants c;
+    return minimaxSearchTime(position, time, playAsX, c);
+}
+
+GameState minimaxSearchTime(GameState position, int time, bool playAsX, constants c) {
 
     int endTime = std::time(nullptr) + time;
 
@@ -458,7 +475,7 @@ GameState minimaxSearchTime(GameState position, int time, bool playAsX) {
         for (nodeAndEval &j : childEvals) {
             Node i = j.n;
             timeLimitedSearchResult result;
-            result = minimaxTimeLimited(i, depth - 1, -1 * inf, inf, !playAsX, endTime);
+            result = minimaxTimeLimited(i, depth - 1, -1 * inf, inf, !playAsX, endTime, c);
 
             // If time has expired, return the best fully searched move
             if (!result.complete) {
@@ -505,6 +522,11 @@ GameState minimaxSearchTime(GameState position, int time, bool playAsX) {
     }
 };
 
-boardCoords minimaxSearchMoveTime(GameState position, int time, bool playAsX) {
-    return minimaxSearchTime(position, time, playAsX).previousMove;
+boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX) {
+    constants c;
+    return minimaxSearchTimeMove(position, time, playAsX, c);
+}
+
+boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX, constants c) {
+    return minimaxSearchTime(position, time, playAsX, c).previousMove;
 };

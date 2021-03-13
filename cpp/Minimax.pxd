@@ -18,6 +18,8 @@ cdef extern from "include/GameState.h":
 
         int getPosition(int, int)
 
+        int isValidMove(int, int)
+
 
     cdef struct boardCoords:
         char board, piece
@@ -31,5 +33,5 @@ cdef extern from "include/Minimax.h":
         GameState board
 
     cdef boardCoords minimaxSearchMove(GameState, int, bool)
-    cdef boardCoords minimaxSearchMoveTime(GameState, int, bool)
+    cdef boardCoords minimaxSearchTimeMove(GameState, int, bool)
 
