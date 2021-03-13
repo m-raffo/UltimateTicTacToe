@@ -10,8 +10,14 @@ cdef extern from "include/GameState.h":
         void move(int, int)
         GameState getCopy()
         int getStatus()
+        int getBoardStatus(int)
+        int getBoard
+
+        int getRequiredBoard()
+        int getToMove()
 
         int getPosition(int, int)
+
 
     cdef struct boardCoords:
         char board, piece
