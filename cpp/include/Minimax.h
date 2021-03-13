@@ -10,7 +10,7 @@ float evaluate(GameState board);
 
 float miniboardEvalOneSide(bitset<20> miniboard, int side);
 
-const int c1 = 5, c2 = 1, cw = 25, cl = 0, ct = 1;
+const int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 0;
 
 const int winningPossibilities[9][4][2] = {
     {{1, 2}, {4, 8}, {3, 6}, {-1, -1}},

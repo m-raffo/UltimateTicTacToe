@@ -132,6 +132,9 @@ significances calcSignificances(bitset<20> fullBoard[9], float evaluationsX[9], 
     int result1, result2;
     int winCoords1, winCoords2;
 
+    // Boards that cannot be used in a win have a sig of 0
+    bool isUsableX, isUsableO;
+
     // Loop through each miniboard
     for (int i = 0; i < 9; i++)
     {
@@ -150,30 +153,49 @@ significances calcSignificances(bitset<20> fullBoard[9], float evaluationsX[9], 
             result.sigsX[i] = lostSig;
 
         } else {
-            result.sigsX[i] = 0;
-            result.sigsO[i] = 0;
+            result.sigsX[i] = 1;
+            result.sigsO[i] = 1;
+
+            isUsableO = false;
+            isUsableX = false;
             // Loop through each winning possibility
             for (int winIndex = 0; winIndex < 4; winIndex++) {
+                // Break when end of winningPossibilities is reached
                 winCoords1 = winningPossibilities[i][winIndex][0];
                 winCoords2 = winningPossibilities[i][winIndex][1];
+
+                if (winCoords1 == -1) {
+                    break;
+                }
 
                 // If either board is already won for the other side (or tied), sig is zero
                 if (!fullBoard[winCoords1][1] && !fullBoard[winCoords2][1]) {
                     result1 = evaluationsX[winCoords1];
                     result2 = evaluationsX[winCoords2];
                     result.sigsX[i] += result1 + result2;
+                    isUsableX = true;
                 }
 
                 if (!fullBoard[winCoords1][0] && !fullBoard[winCoords2][0]) {
                     result1 = evaluationsY[winCoords1];
                     result2 = evaluationsY[winCoords2];
                     result.sigsO[i] += result1 + result2;
+                    isUsableO = true;
+
                 }
 
             }
+
+            if (!isUsableX) {
+                result.sigsX[i] = 0;
+            }
+
+            if (!isUsableO) {
+                result.sigsO[i] = 0;
+            }
         }
     }
-    
+
     return result;
 };
 
@@ -344,8 +366,6 @@ GameState minimaxSearch(GameState position, int depth, bool playAsX) {
         }
 
     }
-
-    cout << bestEval << '\n';
 
     // Return the correct forced result board if necessary
     if (bestEval == inf) {

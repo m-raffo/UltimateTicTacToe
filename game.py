@@ -4,6 +4,8 @@ import pygame
 import gamestate
 import mcts
 
+import Minimax
+
 from pygame.locals import (
     K_ESCAPE,
     KEYDOWN,
@@ -28,6 +30,8 @@ HUMAN_PLAY_AS_O = True
 DEPTH1 = 2
 DEPTH2 = 4
 
+DEPTH = 6
+
 DEPTHS = [3, 4, 6, 8, 10]
 TIME_LIMIT = 4
 
@@ -36,15 +40,16 @@ def draw_game(screen, game):
     draw_board(screen)
 
     board_index = -1
-    for miniboard in game.board:
+    for miniboard_index in range(9):
         board_index += 1
 
-        miniboard_status = mcts.check_win(miniboard)
+        miniboard_status = game.get_board_status(miniboard_index)
 
         board_x = board_index % 3
         board_y = int(board_index / 3)
 
-        if miniboard_status != 2:
+        # If not an ongoing game
+        if miniboard_status != 0:
 
             board_start_x = (
                 SCREEN_WIDTH - 2 * BOARD_BUFFER_X
@@ -57,7 +62,7 @@ def draw_game(screen, game):
             if miniboard_status == 1:
                 img = big_font.render("X", True, (200, 100, 100))
 
-            elif miniboard_status == -1:
+            elif miniboard_status == 2:
                 img = big_font.render("O", True, (100, 100, 200))
 
             else:
@@ -72,24 +77,23 @@ def draw_game(screen, game):
 
             screen.blit(img, (imgx, imgy))
         else:
-            spot_index = -1
-            for spot in miniboard:
-                spot_index += 1
 
+            for spot_index in range(9):
+                spot = game.get_position(miniboard_index, spot_index)
                 if spot == 1:
-                    draw_move(screen, board_index, spot_index, "X", font)
+                    draw_move(screen, miniboard_index, spot_index, "X", font)
 
-                elif spot == -1:
-                    draw_move(screen, board_index, spot_index, "O", font)
+                elif spot == 2:
+                    draw_move(screen, miniboard_index, spot_index, "O", font)
 
-    if game.board_to_move != -1:
-        if game.to_move == -1:
-            box_board(screen, game.board_to_move, (100, 100, 200))
+    if game.get_required_board() != -1:
+        if game.get_to_move() == 2:
+            box_board(screen, game.get_required_board(), (100, 100, 200))
         else:
-            box_board(screen, game.board_to_move, (200, 100, 100))
+            box_board(screen, game.get_required_board(), (200, 100, 100))
 
     else:
-        if game.to_move == -1:
+        if game.get_to_move() == 2:
             to_move_color = (100, 100, 200)
         else:
             to_move_color = (200, 100, 100)
@@ -326,7 +330,7 @@ if __name__ == "__main__":
     big_font = pygame.font.SysFont(None, 425)
     med_font = pygame.font.SysFont(None, 200)
 
-    game = gamestate.GameState()
+    game = Minimax.PyGameState()
 
     if HUMAN_PLAY_AS_O:
         game.move(4, 4)
@@ -334,9 +338,6 @@ if __name__ == "__main__":
     draw_game(screen, game)
     is_players_move = True
     game_running = True
-
-    minimax_node = mcts.Node(game)
-    minimax_results_evals_and_boards = None
 
     while running:
 
@@ -432,59 +433,79 @@ if __name__ == "__main__":
                     is_players_move = False
                     board, piece = mouse_pos_to_board_and_piece(pygame.mouse.get_pos())
 
-                    test_board = minimax_node.board.copy_board()
-
-                    test_board.move(board, piece)
-
-                    # In order to avoid restarting the node tree every time, find the node among current_game_node.children with
-                    # the board that matches the player's move
-                    found_board = False
-
-                    if len(minimax_node.children) == 0:
-                        minimax_node.add_children()
-
-                    for i in minimax_node.children:
-
-                        # If the board matches, use this as the new board
-                        if np.array_equal(i.board.board, test_board.board):
-                            minimax_node = i
-                            found_board = True
-
-                    if not found_board:
-                        print(
-                            "Your move was not found as a valid move. Are you sure you entered it correctly?"
-                        )
-                        print(minimax_node.children)
-                        is_players_move = True
-                        continue
+                    # TODO: Re-enable valid-move checking
+                    # test_board = minimax_node.board.copy_board()
+                    #
+                    # test_board.move(board, piece)
+                    #
+                    # # In order to avoid restarting the node tree every time, find the node among current_game_node.children with
+                    # # the board that matches the player's move
+                    # found_board = False
+                    #
+                    # if len(minimax_node.children) == 0:
+                    #     minimax_node.add_children()
+                    #
+                    # for i in minimax_node.children:
+                    #
+                    #     # If the board matches, use this as the new board
+                    #     if np.array_equal(i.board.board, test_board.board):
+                    #         minimax_node = i
+                    #         found_board = True
+                    #
+                    # if not found_board:
+                    #     print(
+                    #         "Your move was not found as a valid move. Are you sure you entered it correctly?"
+                    #     )
+                    #     print(minimax_node.children)
+                    #     is_players_move = True
+                    #     continue
 
                     # draw_move(screen, board, piece, "O", font)
+
                     game.move(board, piece)
 
-                    print(game.to_move)
-                    print(game)
+                    screen.fill((255, 255, 255))
+                    draw_game(screen, game)
 
-                    result = game.game_result()
+                    print(game.get_to_move())
 
-                    if result != 2:
+                    result = game.get_status()
+                    print(f"RESULT {result}")
+
+                    if result != 0:
                         screen.fill((255, 255, 255))
                         draw_game(screen, game)
                         if result == 1:
                             display_message(screen, "X WINS!")
-                        elif result == -1:
+                        elif result == 2:
                             display_message(screen, "O WINS!")
-                        elif result == 0:
+                        elif result == 3:
                             display_message(screen, "TIE GAME!")
 
                         game_running = False
                         continue
 
-                    (
-                        minimax_results_evals_and_boards,
-                        p,
-                    ) = mcts.minimax_search_prune_time_limited_async(
-                        minimax_node, DEPTHS, TIME_LIMIT, not HUMAN_PLAY_AS_O
-                    )
+                    compBoard, compPiece = game.minimax_search_move(DEPTH, True)
+
+                    game.move(compBoard, compPiece)
+
+                    result = game.get_status()
+                    print(f"RESULT {result}")
+
+                    if result != 0:
+                        screen.fill((255, 255, 255))
+                        draw_game(screen, game)
+                        if result == 1:
+                            display_message(screen, "X WINS!")
+                        elif result == 2:
+                            display_message(screen, "O WINS!")
+                        elif result == 3:
+                            display_message(screen, "TIE GAME!")
+
+                        game_running = False
+                        continue
+
+                    is_players_move = True
         else:
             pygame.event.pump()
     # for event in pygame.event.get():

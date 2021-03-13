@@ -10,6 +10,20 @@ using namespace std;
 int main() {
     GameState myboard;
 
+
+    // myboard.setPosition(0, 0, 1);
+    // myboard.setPosition(0, 3, 1);
+    // myboard.setPosition(0, 2, 2);
+
+    // cout << "EVAL BOARD ONE SIDE " << miniboardEvalOneSide(myboard.board[0], 1) << '\n';
+    // cout << "EVAL BOARD ONE SIDE " << miniboardEvalOneSide(myboard.board[0], 2) << '\n';
+
+    // cout << "OVERALL " << evaluate(myboard) << '\n';
+
+    // return 0;
+
+
+
     // myboard.move(4, 5);
     // myboard.move(5, 0);
     // myboard.move(0, 1);
@@ -28,15 +42,15 @@ int main() {
 
     cout << (numeric_limits<float>::infinity() == numeric_limits<float>::infinity());
 
-    myboard.move(3, 8);
-    myboard.move(8, 2);
+    myboard.move(4, 4);
+    // myboard.move(8, 2);
 
     myboard.displayGame();
 
 
     int board, piece;
 
-    while (true) {
+    while (false) {
 
         cout << "\n\n";
         myboard = minimaxSearch(myboard, 2, true);
@@ -56,6 +70,7 @@ int main() {
         cout << "\n\n";
 
         myboard = minimaxSearch(myboard, 6, false);
+
 
         myboard.displayGame();
 
