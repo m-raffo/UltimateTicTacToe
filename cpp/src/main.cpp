@@ -50,6 +50,15 @@ int main() {
 
     int board, piece;
 
+    constants c1, c2;
+
+    // c1.c1 = 6;
+    c2.c1 = 6;
+
+    cout << computerVcomputer(4, c1, 6, c2, true);
+
+    return 0;
+
     while (true) {
 
         cout << "\n\n";

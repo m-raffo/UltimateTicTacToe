@@ -33,7 +33,7 @@ DEPTH2 = 4
 DEPTH = 7
 
 DEPTHS = [3, 4, 6, 8, 10]
-TIME_LIMIT = 6
+TIME_LIMIT = 4
 
 
 def draw_game(screen, game):
@@ -483,7 +483,8 @@ if __name__ == "__main__":
                             display_message(screen, "TIE GAME!")
 
                         game_running = False
-                        continue
+                        running = False
+                        break
 
                     compBoard, compPiece = game.minimax_search_move_time(
                         TIME_LIMIT, True
@@ -505,11 +506,18 @@ if __name__ == "__main__":
                             display_message(screen, "TIE GAME!")
 
                         game_running = False
-                        continue
+                        running = False
+                        break
 
                     is_players_move = True
         else:
             pygame.event.pump()
+
+    while True:
+        clock.tick(15)
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
     # for event in pygame.event.get():
     #
     #     if event.type == MOUSEBUTTONDOWN:

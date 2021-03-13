@@ -7,7 +7,7 @@
 
 using namespace std;
 
-float evaluate(GameState board) {
+float evaluate(GameState board, constants c) {
     /**
      * Evaluates the given position.
      * @return The evaluation, Positive indicates advantage to X, negative indicates advantage to O
@@ -27,8 +27,8 @@ float evaluate(GameState board) {
     }
 
     for (int i = 0; i < 9; i++) {
-        miniboardEvalsX[i] = miniboardEvalOneSide(position[i], 1);
-        miniboardEvalsO[i] = miniboardEvalOneSide(position[i], 2);
+        miniboardEvalsX[i] = miniboardEvalOneSide(position[i], 1, c);
+        miniboardEvalsO[i] = miniboardEvalOneSide(position[i], 2, c);
     }
 
     significances sigs;
@@ -44,7 +44,7 @@ float evaluate(GameState board) {
 }
 
 
-float miniboardEvalOneSide(bitset<20> miniboard, int side) {
+float miniboardEvalOneSide(bitset<20> miniboard, int side, constants c) {
     /**
      * Evaluates a single miniboard for one side.
      * 
@@ -69,12 +69,12 @@ float miniboardEvalOneSide(bitset<20> miniboard, int side) {
 
     int result = getMiniboardResults(miniboard);
     if (result == side) {
-        return cw;
+        return c.cw;
     // Check if the other side won
     } else if (result == 2 / side) {
-        return cl;
+        return c.cl;
     } else if (result == 3) {
-        return ct;
+        return c.ct;
     }
 
     // Calculate w and r
@@ -122,7 +122,7 @@ float miniboardEvalOneSide(bitset<20> miniboard, int side) {
         index += 1;
     }
 
-    return c1 * sqrt(w) + c2 * r;
+    return c.c1 * sqrt(w) + c.c2 * r;
 }
 
 significances calcSignificances(bitset<20> fullBoard[9], float evaluationsX[9], float evaluationsY[9]) {
@@ -259,7 +259,7 @@ timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha,
 
     // Check if depth is reached or game is over
     if (depth <= 0 || node.board.getStatus() != 0) {
-        bestEval = evaluate(node.board);
+        bestEval = evaluate(node.board, c);
 
         if (isinf(bestEval)) {
             // Save the depth if the evaluation is infinite
@@ -459,7 +459,7 @@ GameState minimaxSearchTime(GameState position, int time, bool playAsX, constant
     for (Node i : start.children) {
         nodeAndEval childAndEval;
         childAndEval.n = i;
-        childAndEval.e = evaluate(i.board) * evalMultiplier;
+        childAndEval.e = evaluate(i.board, c) * evalMultiplier;
         childEvals.push_back(childAndEval);
     }
 
@@ -530,3 +530,30 @@ boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX) {
 boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX, constants c) {
     return minimaxSearchTime(position, time, playAsX, c).previousMove;
 };
+
+int computerVcomputer(int depth1, constants c1, int depth2, constants c2, bool displayGames) {
+    GameState game;
+    boardCoords move;
+
+
+    while (game.getStatus() == 0) {
+        move = minimaxSearchMove(game, depth1, true, c1);
+
+        game.move(move.board, move.piece);
+
+        if (displayGames)
+            game.displayGame();
+
+        if (game.getStatus() != 0)
+            break;
+
+        move = minimaxSearchMove(game, depth2, false, c2);
+
+        game.move(move.board, move.piece);
+
+        if (displayGames)
+            game.displayGame();
+    }
+
+    return game.getStatus();
+}

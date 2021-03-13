@@ -6,11 +6,15 @@ using namespace std;
 #include <vector>
 #include <iostream>
 
-float evaluate(GameState board);
-
-float miniboardEvalOneSide(bitset<20> miniboard, int side);
-
 const int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 0;
+
+struct constants {
+    int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 0;
+};
+
+float evaluate(GameState board, constants c);
+
+float miniboardEvalOneSide(bitset<20> miniboard, int side, constants c);
 
 const int winningPossibilities[9][4][2] = {
     {{1, 2}, {4, 8}, {3, 6}, {-1, -1}},
@@ -83,9 +87,7 @@ struct timeLimitedSearchResult {
     float result;
 };
 
-struct constants {
-    int c1 = c1, c2 = c2, cw = cw, cl = cl, ct = ct;
-};
+
 
 float minimax(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, constants c);
 timeLimitedSearchResult minimaxTimeLimited(Node (&node), int depth, float alpha, float beta, bool maximizingPlayer, int time, constants c);
@@ -101,3 +103,5 @@ GameState minimaxSearchTime(GameState position, int time, bool playAsX, constant
 
 boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX);
 boardCoords minimaxSearchTimeMove(GameState position, int time, bool playAsX, constants c);
+
+int computerVcomputer(int depth1, constants c1, int depth2, constants c2, bool displayGames);
