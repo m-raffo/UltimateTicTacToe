@@ -50,14 +50,36 @@ int main() {
 
     int board, piece;
 
+    auto start = chrono::high_resolution_clock::now();
+
+
+
+    // // vector<GameState> allMoves = myboard.allPossibleMoves();
+    // // cout << "IN BETWEEN \n";
+
+    myboard = minimaxSearch(myboard, 6, true);
+
+
+    auto stop = chrono::high_resolution_clock::now();
+
+
+    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+
+    cout << "TIME TAKEN ";
+    cout << duration.count() << " milliseconds\n\n\n";
+
+    myboard.displayGame();
+
+    return 0;
+
     constants c1, c2;
 
     // c1.c1 = 6;
-    c2.c1 = 6;
+    // c2.c1 = 6;
 
-    cout << computerVcomputer(4, c1, 6, c2, true);
+    std::cout << computerVcomputer(6, c1, 6, c2, true);
 
-    return 0;
+    // return 0;
 
     while (true) {
 

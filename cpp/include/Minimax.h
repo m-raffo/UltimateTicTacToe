@@ -5,11 +5,16 @@ using namespace std;
 #include <bitset>
 #include <vector>
 #include <iostream>
+#include <unordered_map>
 
 const int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 0;
 
 struct constants {
     int c1 = 2, c2 = 1, cw = 10, cl = 0, ct = 0;
+};
+
+struct dualEvals {
+    float x, o;
 };
 
 float evaluate(GameState board, constants c);

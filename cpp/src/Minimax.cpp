@@ -7,6 +7,10 @@
 
 using namespace std;
 
+
+unordered_map<bitset<20>, dualEvals> evaluationMap;
+
+
 float evaluate(GameState board, constants c) {
     /**
      * Evaluates the given position.
@@ -27,8 +31,26 @@ float evaluate(GameState board, constants c) {
     }
 
     for (int i = 0; i < 9; i++) {
-        miniboardEvalsX[i] = miniboardEvalOneSide(position[i], 1, c);
-        miniboardEvalsO[i] = miniboardEvalOneSide(position[i], 2, c);
+        // Check if the position is saved in the database with an evaluation
+        bitset<20> currentMiniboard = position[i];
+        auto matchingPattern = evaluationMap.find(currentMiniboard);
+
+        // If the position is saved, use the saved evaluations
+        if (matchingPattern != evaluationMap.end()) {
+            miniboardEvalsX[i] = matchingPattern->second.x;
+            miniboardEvalsO[i] = matchingPattern->second.o;
+        } else {
+            // Calculate the evaluations and save them
+            miniboardEvalsX[i] = miniboardEvalOneSide(position[i], 1, c);
+            miniboardEvalsO[i] = miniboardEvalOneSide(position[i], 2, c);
+
+            dualEvals resultEvaluation;
+            resultEvaluation.x = miniboardEvalsX[i];
+            resultEvaluation.o = miniboardEvalsO[i];
+
+            const bitset<20> positionConst = position[i]; 
+            evaluationMap[positionConst] = resultEvaluation;
+        }
     }
 
     significances sigs;
