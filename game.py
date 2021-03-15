@@ -30,10 +30,10 @@ HUMAN_PLAY_AS_O = True
 DEPTH1 = 2
 DEPTH2 = 4
 
-DEPTH = 7
+DEPTH = 10
 
 DEPTHS = [3, 4, 6, 8, 10]
-TIME_LIMIT = 4
+TIME_LIMIT = 5
 
 
 def draw_game(screen, game):
@@ -333,7 +333,7 @@ if __name__ == "__main__":
     game = Minimax.PyGameState()
 
     if HUMAN_PLAY_AS_O:
-        game.move(4, 4)
+        game.move(4, 0)
 
     draw_game(screen, game)
     is_players_move = True
@@ -433,7 +433,6 @@ if __name__ == "__main__":
                     is_players_move = False
                     board, piece = mouse_pos_to_board_and_piece(pygame.mouse.get_pos())
 
-                    # TODO: Re-enable valid-move checking
                     found_board = game.is_valid_move(board, piece)
                     # test_board = minimax_node.board.copy_board()
                     #
@@ -489,6 +488,8 @@ if __name__ == "__main__":
                     compBoard, compPiece = game.minimax_search_move_time(
                         TIME_LIMIT, True
                     )
+
+                    # compBoard, compPiece = game.minimax_search_move(DEPTH, True)
 
                     game.move(compBoard, compPiece)
 

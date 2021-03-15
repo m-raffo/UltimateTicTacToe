@@ -40,7 +40,15 @@ int main() {
 
     // myboard.move(4, 4);
 
-    cout << (numeric_limits<float>::infinity() == numeric_limits<float>::infinity());
+    
+    constants c1, c2;
+
+    // c1.c1 = 6;
+    // c2.c1 = 6;
+
+    std::cout << computerVcomputer(6, c1, 8, c2, true);
+
+    return 0;
 
     // myboard.move(4, 4);
     // myboard.move(8, 2);
@@ -56,8 +64,11 @@ int main() {
 
     // // vector<GameState> allMoves = myboard.allPossibleMoves();
     // // cout << "IN BETWEEN \n";
+    myboard.move(4, 0);
 
-    myboard = minimaxSearch(myboard, 6, true);
+    myboard = minimaxSearch(myboard, 10, false);
+
+    // boardCoords test = minimaxSearchTimeMove(myboard, 4, true);
 
 
     auto stop = chrono::high_resolution_clock::now();
@@ -72,12 +83,12 @@ int main() {
 
     return 0;
 
-    constants c1, c2;
+    // constants c1, c2;
 
     // c1.c1 = 6;
     // c2.c1 = 6;
 
-    std::cout << computerVcomputer(6, c1, 6, c2, true);
+    // std::cout << computerVcomputer(11, c1,  2, c2, true);
 
     // return 0;
 

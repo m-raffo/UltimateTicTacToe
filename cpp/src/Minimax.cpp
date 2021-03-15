@@ -557,6 +557,8 @@ int computerVcomputer(int depth1, constants c1, int depth2, constants c2, bool d
     GameState game;
     boardCoords move;
 
+    game.move(4, 0);
+    game.move(0, 0);
 
     while (game.getStatus() == 0) {
         move = minimaxSearchMove(game, depth1, true, c1);
