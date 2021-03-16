@@ -1,10 +1,5 @@
-# import numpy as np
 import time
-
 import pygame
-
-# import gamestate
-# import mcts
 
 import Minimax
 
@@ -347,72 +342,7 @@ if __name__ == "__main__":
             screen.fill((255, 255, 255))
             draw_game(screen, game)
 
-        if not is_players_move and game_running:
-            pygame.event.pump()
-            if minimax_results_evals_and_boards.ready():
-                p.close()
-                p.terminate()
-
-                is_players_move = True
-                evals_and_boards = minimax_results_evals_and_boards.get()
-
-                if HUMAN_PLAY_AS_O:
-                    # Order the moves based on their evaluations
-                    result = max(evals_and_boards, key=lambda x: (x[0]))
-
-                    # If a forced win, take the shortest path to get there
-                    if result[0] == float("inf"):
-                        result = max(
-                            evals_and_boards, key=lambda x: (x[0], -x[1].inf_depth)
-                        )
-
-                    # If a forced loss, take the longest path to get there
-                    elif result[0] == float("-inf"):
-                        result = max(
-                            evals_and_boards, key=lambda x: (x[0], x[1].inf_depth)
-                        )
-
-                else:
-                    # Order the moves based on their evaluations
-                    result = min(evals_and_boards, key=lambda x: (x[0]))
-
-                    # If a forced win, take the shortest path to get there
-                    if result[1] == float("-inf"):
-                        result = min(
-                            evals_and_boards, key=lambda x: (x[0], x[1].inf_depth)
-                        )
-
-                    # If a forced loss, take the longest path to get there
-                    elif result[1] == float("inf"):
-                        result = min(
-                            evals_and_boards, key=lambda x: (x[0], -x[1].inf_depth)
-                        )
-
-                current_eval, minimax_node = result
-
-                minimax_node.children = []
-                minimax_node.add_children()
-
-                move = minimax_node.board.previous_move
-                game.move(*move)
-                # draw_move(screen, move[0], move[1], "X", font)
-
-                print(game)
-
-                result = game.game_result()
-                if result != 2:
-                    screen.fill((255, 255, 255))
-                    draw_game(screen, game)
-                    if result == 1:
-                        display_message(screen, "X WINS!")
-                    elif result == -1:
-                        display_message(screen, "O WINS!")
-                    elif result == 0:
-                        display_message(screen, "TIE GAME!")
-
-                    game_running = False
-
-        elif is_players_move and game_running:
+        if is_players_move and game_running:
             for event in pygame.event.get():
                 # Did the user hit a key?
 
@@ -434,32 +364,13 @@ if __name__ == "__main__":
                     board, piece = mouse_pos_to_board_and_piece(pygame.mouse.get_pos())
 
                     found_board = game.is_valid_move(board, piece)
-                    # test_board = minimax_node.board.copy_board()
-                    #
-                    # test_board.move(board, piece)
-                    #
-                    # # In order to avoid restarting the node tree every time, find the node among current_game_node.children with
-                    # # the board that matches the player's move
-                    # found_board = False
-                    #
-                    # if len(minimax_node.children) == 0:
-                    #     minimax_node.add_children()
-                    #
-                    # for i in minimax_node.children:
-                    #
-                    #     # If the board matches, use this as the new board
-                    #     if np.array_equal(i.board.board, test_board.board):
-                    #         minimax_node = i
-                    #         found_board = True
-                    #
+
                     if not found_board:
                         print(
                             "Your move was not found as a valid move. Are you sure you entered it correctly?"
                         )
                         is_players_move = True
                         continue
-
-                    # draw_move(screen, board, piece, "O", font)
 
                     game.move(board, piece)
 
