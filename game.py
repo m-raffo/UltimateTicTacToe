@@ -1,8 +1,10 @@
-import numpy as np
+# import numpy as np
+import time
+
 import pygame
 
-import gamestate
-import mcts
+# import gamestate
+# import mcts
 
 import Minimax
 
@@ -300,9 +302,7 @@ def display_message(screen, text, color=(255, 255, 255), bg_color=(100, 100, 100
 
     # Draw the background
     pygame.draw.rect(
-        screen,
-        bg_color,
-        pygame.Rect(rectx, recty, width, height),
+        screen, bg_color, pygame.Rect(rectx, recty, width, height),
     )
 
     # Draw the text
@@ -485,9 +485,16 @@ if __name__ == "__main__":
                         running = False
                         break
 
+                    startTime = time.time()
                     compBoard, compPiece = game.minimax_search_move_time(
                         TIME_LIMIT, True
                     )
+
+                    endTime = time.time()
+
+                    # If the computer moves in less than two seconds, wait two seconds
+                    if endTime - startTime < 2:
+                        pygame.time.delay(2000)
 
                     # compBoard, compPiece = game.minimax_search_move(DEPTH, True)
 
